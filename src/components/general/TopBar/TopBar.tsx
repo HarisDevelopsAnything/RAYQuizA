@@ -19,14 +19,15 @@ const TopBar = ({ onClickAbout, darkMode }: Props) => {
       margin="0px"
       width="100vw"
       colorPalette="teal"
-      backgroundColor="rgba(255,255,255,0.1)"
-      backdropFilter="blur(10px)"
+      backgroundColor="rgba(0,0,0,.5)"
+      backdropFilter="blur(30px)"
       padding="10px"
       borderRadius="5px"
       flexDirection="row"
       display="flex"
       position="static"
-      className="sticky-topbar"
+      id="sticky-topbar"
+      className="glass-card"
     >
       <Button onClick={() => onClickAbout()}>Show help</Button>
       <Spacer />

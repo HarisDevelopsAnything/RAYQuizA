@@ -26,7 +26,7 @@ const ThemeToggle = ({ darkMode, onClick }: Props) => {
         transition: "all 0.3s ease",
       }}
       _hover={{
-        transform: "scale(1.1)",
+        transform: "scale(1.5)",
       }}
     >
       <div

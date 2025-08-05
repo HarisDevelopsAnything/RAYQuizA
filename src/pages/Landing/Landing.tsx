@@ -15,11 +15,17 @@ import {
 import { FaArrowRight } from "react-icons/fa";
 import Interesting from "@/components/general/Interesting/Interesting";
 import { useNavigate } from "react-router-dom";
+import TopBar from "@/components/general/TopBar/TopBar";
 
 const Landing = () => {
   const navigate = useNavigate();
+  const [isShowingAbout, setIsShowingAbout] = useState(false);
+  const onClickAbout = () => {
+    setIsShowingAbout(!isShowingAbout);
+  };
   return (
     <>
+      <TopBar onClickAbout={onClickAbout}></TopBar>
       <Container
         transition="backgrounds 0.3s ease"
         fluid

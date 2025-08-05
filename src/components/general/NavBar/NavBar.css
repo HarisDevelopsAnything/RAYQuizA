@@ -1,0 +1,14 @@
+.sticky-topbar{
+    position: sticky;
+    top: 0px;
+    z-index: 10;
+    /* From https://css.glass */
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 0px;
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(20px);
+    border: none;
+}
+.glass-back {
+
+}

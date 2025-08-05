@@ -10,7 +10,7 @@ const Sidebar = ({ username }: Props) => {
     <Container
       bgColor={"bg.subtle"}
       height="100vh"
-      width="3/12"
+      width="100%"
       position={"relative"}
       left="0px"
     >

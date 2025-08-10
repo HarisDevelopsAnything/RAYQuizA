@@ -11,14 +11,34 @@ import {
   SimpleGrid,
   useBreakpointValue,
 } from "@chakra-ui/react";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Landing from "../Landing/Landing";
 import QuizCard from "@/components/home/QuizCard/QuizCard";
+import "./Home.css";
+import QuizPopup from "@/components/general/QuizPopup/QuizPopup";
+
+type Quiz = {
+  name: string;
+  desc: string;
+  duration: string;
+};
 
 const Home = () => {
   const isMobile = useBreakpointValue({ base: true, lg: false });
+  const [isQuizPopupShowing, setShowingQuizPopup] = useState(true);
+  const toggleQuizPopup = () => {
+    setShowingQuizPopup(!isQuizPopupShowing);
+  };
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/quizzes")
+      .then((res) => res.json())
+      .then((data) => setQuizzes(data))
+      .catch((err) => console.error(err));
+  }, []);
   return (
-    <Container>
+    <Container left="0px" margin="0" padding="0">
       <Grid
         templateAreas={{
           base: `"nav" "main"`,
@@ -43,9 +63,33 @@ const Home = () => {
           width={isMobile ? "100vw" : "80vw"}
         >
           <SimpleGrid columns={isMobile ? 1 : 4}>
-            <QuizCard name="Mathematics" desc="Ca" duration="60 min"></QuizCard>
+            {quizzes.map((quiz, index) => (
+              <QuizCard
+                key={index}
+                name={quiz.name}
+                desc={quiz.desc}
+                duration={quiz.duration}
+              ></QuizCard>
+            ))}
+            <Center>
+              <Button
+                variant={"solid"}
+                colorPalette="teal"
+                width="100%"
+                onClick={toggleQuizPopup}
+              >
+                Take Quiz
+              </Button>
+            </Center>
           </SimpleGrid>
         </GridItem>
+        {isQuizPopupShowing && (
+          <QuizPopup
+            title="Hello world"
+            description="Hello jon"
+            onclose={toggleQuizPopup}
+          ></QuizPopup>
+        )}
       </Grid>
     </Container>
   );

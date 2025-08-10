@@ -7,7 +7,7 @@ import { FaUser } from "react-icons/fa6";
 const NavBar = () => {
   return (
     <HStack height={"60px"} className={"sticky-topbar"} top={0} zIndex={20}>
-      <FaUser size="20px" />
+      <FaUser size="40px" />
       <Spacer />
       <MdPhoneAndroid />
     </HStack>

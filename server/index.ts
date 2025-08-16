@@ -10,6 +10,7 @@ app.use(express.json()); // Required for POST JSON parsing
 
 // Google OAuth client
 const googleClient = new OAuth2Client(process.env.VITE_GOOGLE_CLIENT_ID);
+const port = process.env.PORT || 5000;
 
 // ✅ Google Login Route
 app.post("/api/auth/google", async (req, res) => {
@@ -74,4 +75,4 @@ app.get("/api/quizzes", async (req, res) => {
   }
 });
 
-app.listen(5000, () => console.log("Server running on port 5000"));
+app.listen(port, () => console.log("Server running on port 5000"));

@@ -51,7 +51,10 @@ app.post("/api/auth/google", async (req, res) => {
     res.status(500).json({ error: "Google login failed" });
   }
 });
-
+// ✅ Health Check Route
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
 // ✅ Existing routes
 app.get("/api/users", async (req, res) => {
   try {

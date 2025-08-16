@@ -32,7 +32,7 @@ const Home = () => {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/quizzes")
+    fetch("https://rayquiza-backend.onrender.com/api/quizzes")
       .then((res) => res.json())
       .then((data) => setQuizzes(data))
       .catch((err) => console.error(err));

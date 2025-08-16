@@ -1,4 +1,4 @@
-import { Container, Heading, Text, type Color } from "@chakra-ui/react";
+import { Container, Heading, HStack, Text, type Color } from "@chakra-ui/react";
 import React from "react";
 
 interface Props {
@@ -6,9 +6,10 @@ interface Props {
   desc: string;
   color: "teal" | "black" | "white" | "orange";
   bgcolor: string;
+  icon?: React.ReactNode;
 }
 
-const Interesting = ({ title, desc, color, bgcolor }: Props) => {
+const Interesting = ({ title, desc, color, bgcolor, icon }: Props) => {
   return (
     <>
       <Container
@@ -22,7 +23,10 @@ const Interesting = ({ title, desc, color, bgcolor }: Props) => {
         transition="ease 0.3s all"
         _hover={{ transform: "translateY(-5px)" }}
       >
-        <Heading>{title}</Heading>
+        <HStack>
+          <Heading>{title}</Heading>
+          {icon}
+        </HStack>
         <Text fontSize={"1xl"}>{desc}</Text>
       </Container>
     </>

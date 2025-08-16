@@ -2,4 +2,6 @@ body{
     height: 100vh;
     padding: 0px;
     transition-duration: 2s;
+    font-family: Inter;
+    font-weight: 400;
 }

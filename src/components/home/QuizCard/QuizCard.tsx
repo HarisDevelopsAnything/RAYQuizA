@@ -14,14 +14,16 @@ const QuizCard = ({ name, desc, duration }: Props) => {
     <Card.Root
       margin={"10px"}
       padding={"5px"}
+      border={"none"}
       borderRadius={16}
       backdropFilter={"blur(5px)"}
-      colorPalette={""}
+      backgroundColor={
+        colorMode == "light" ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.8)"
+      }
+      color={colorMode == "light" ? "black" : "white"}
     >
       <Center>
-        <Card.Title color={colorMode == "light" ? "gray.500" : "white"}>
-          {name}
-        </Card.Title>
+        <Card.Title>{name}</Card.Title>
       </Center>
       <hr></hr>
       <Card.Body color="fg.subtle">

@@ -3,45 +3,48 @@ import { Flex, Link, Text, Container, VStack } from "@chakra-ui/react";
 
 const footerData = [
   {
-    label: "Writing",
-    href: "#",
+    label: "Quizzes",
+    href: "/quizzes",
     links: [
-      { label: "Digital Garden", href: "#" },
-      { label: "Tutorials", href: "#" },
-      { label: "React", href: "#" },
-      { label: "Community", href: "#" },
+      { label: "All Quizzes", href: "/quizzes" },
+      { label: "Create Quiz", href: "/create" },
+      { label: "My Attempts", href: "/profile/attempts" },
+      { label: "Leaderboard", href: "/leaderboard" },
     ],
   },
   {
-    label: "Art",
-    href: "#",
+    label: "Resources",
+    href: "/docs",
     links: [
-      { label: "Design", href: "#" },
-      { label: "3D Art", href: "#" },
-      { label: "Photography", href: "#" },
+      { label: "Documentation", href: "/docs" },
+      { label: "API Reference", href: "/api" },
+      { label: "Tutorials", href: "/tutorials" },
+      { label: "Examples", href: "/examples" },
+    ],
+  },
+  {
+    label: "Community",
+    href: "/community",
+    links: [
+      { label: "Discord", href: "https://discord.gg/your-server" },
+      { label: "Twitter", href: "https://twitter.com/your-handle" },
+      { label: "GitHub", href: "https://github.com/your-org/RAYQuizA" },
+      { label: "Contribute", href: "/contribute" },
     ],
   },
   {
     label: "About",
-    href: "#",
+    href: "/about",
     links: [
-      { label: "Appearances", href: "#" },
-      { label: "Projects", href: "#" },
-      { label: "Uses", href: "#" },
-    ],
-  },
-  {
-    label: "Social",
-    href: "#",
-    links: [
-      { label: "Email", href: "#" },
-      { label: "Twitter", href: "#" },
-      { label: "Github", href: "#" },
-      { label: "Linkedin", href: "#" },
-      { label: "RSS", href: "#" },
+      { label: "About RAYQuizA", href: "/about" },
+      { label: "Roadmap", href: "/roadmap" },
+      { label: "Support", href: "/support" },
+      { label: "Privacy & Terms", href: "/legal" },
     ],
   },
 ];
+
+const APP_VERSION = "v1.0.0";
 
 const Footer = () => {
   return (

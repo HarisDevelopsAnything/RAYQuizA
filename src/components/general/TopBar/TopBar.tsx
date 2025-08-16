@@ -22,24 +22,28 @@ const TopBar = ({ onClickAbout, darkMode }: Props) => {
       backgroundColor="rgba(0,0,0,.5)"
       backdropFilter="blur(30px)"
       padding="10px"
-      borderRadius="5px"
+      borderBottomRadius="10px"
       flexDirection="row"
       display="flex"
       position="static"
       id="sticky-topbar"
       className="glass-card"
     >
-      <Button onClick={() => onClickAbout()}>Show help</Button>
+      <Button onClick={() => onClickAbout()} borderRadius={"10px"}>
+        Show help
+      </Button>
       <Spacer />
       <ButtonGroup>
         <ThemeSwitch
           darkMode={isDarkMode}
           onClick={() => setMode()}
         ></ThemeSwitch>
-        <Button variant="solid" colorPalette={"teal"}>
+        <Button variant="solid" colorPalette={"teal"} borderRadius={"10px"}>
           Login
         </Button>
-        <Button variant="outline">Sign up</Button>
+        <Button variant="outline" borderRadius={"10px"}>
+          Sign up
+        </Button>
       </ButtonGroup>
     </Container>
   );

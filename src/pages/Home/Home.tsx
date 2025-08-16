@@ -38,7 +38,7 @@ const Home = () => {
       .catch((err) => console.error(err));
   }, []);
   return (
-    <Container left="0px" margin="0" padding="0">
+    <Container left="0px" margin="0" padding="0" height="60vh">
       <Grid
         templateAreas={{
           base: `"nav" "main"`,
@@ -71,16 +71,6 @@ const Home = () => {
                 duration={quiz.duration}
               ></QuizCard>
             ))}
-            <Center>
-              <Button
-                variant={"solid"}
-                colorPalette="teal"
-                width="100%"
-                onClick={toggleQuizPopup}
-              >
-                Take Quiz
-              </Button>
-            </Center>
           </SimpleGrid>
         </GridItem>
         {isQuizPopupShowing && (

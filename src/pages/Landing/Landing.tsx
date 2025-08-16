@@ -16,6 +16,17 @@ import { FaArrowRight } from "react-icons/fa";
 import Interesting from "@/components/general/Interesting/Interesting";
 import { useNavigate } from "react-router-dom";
 import TopBar from "@/components/general/TopBar/TopBar";
+import Footer from "@/components/general/Footer/Footer";
+import { BiHelpCircle, BiQuestionMark } from "react-icons/bi";
+import { ImInfo } from "react-icons/im";
+import { MdDifference } from "react-icons/md";
+import { FcPrivacy } from "react-icons/fc";
+import { FaHandHolding } from "react-icons/fa6";
+import { DiGithub } from "react-icons/di";
+import { BsGithub } from "react-icons/bs";
+import { IoBusiness } from "react-icons/io5";
+import { CgPokemon } from "react-icons/cg";
+import { SiMongodb } from "react-icons/si";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -58,30 +69,49 @@ const Landing = () => {
         <SimpleGrid columns={2} minChildWidth={"sm"}>
           <Interesting
             title="What is with the name?"
-            desc="The site was named after Rayquaza, the legendary Pokemon."
+            desc="The site was named after Rayquaza, the legendary Pokemon. Reason? Because we love Pokemon! And it was a catchy name."
             color="white"
             bgcolor="teal"
+            icon={<CgPokemon size="30px" />}
           ></Interesting>
           <Interesting
             title="What's different?"
-            desc="RAYQuizA is a quiz platform built by the students, for the students."
+            desc="RAYQuizA is a quiz platform built by the students, for the students. We understand the pain of boring quizzes, so we made it fun!"
             color="white"
             bgcolor="green.600"
+            icon={<MdDifference size="30px" />}
           ></Interesting>
           <Interesting
-            title="What's different?"
-            desc="RAYQuizA is a quiz platform built by the students, for the students."
+            title="How to create quizzes?"
+            desc="Create quizzes from the 'Create' page — supports multiple choice, timed questions, images, and instant scoring. Join quizzes using a code."
             color="white"
-            bgcolor="green.600"
+            bgcolor="purple.600"
+            icon={<BiHelpCircle size="30px" />}
           ></Interesting>
           <Interesting
-            title="What is with the name?"
-            desc="The site was named after Rayquaza, the legendary Pokemon."
+            title="Privacy & Data"
+            desc="Student responses and quiz results are stored securely in a MongoDB Atlas database."
             color="white"
-            bgcolor="teal"
+            bgcolor="blue.600"
+            icon={<SiMongodb size="30px" />}
+          ></Interesting>
+          <Interesting
+            title="Contributors"
+            desc="Can you offer help? RAYQuizA is completely open source and built by three engineers.Visit our GitHub page to know more!"
+            color="white"
+            bgcolor="orange.600"
+            icon={<BsGithub size="30px" />}
+          ></Interesting>
+          <Interesting
+            title="Corporate?"
+            desc="There is a mode for that. No powerups or funny stuff, just pure business."
+            color="white"
+            bgcolor="gray.600"
+            icon={<IoBusiness size="30px" />}
           ></Interesting>
         </SimpleGrid>
       </Container>
+      <Footer />
     </>
   );
 };

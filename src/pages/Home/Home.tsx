@@ -7,8 +7,10 @@ import {
   Container,
   Grid,
   GridItem,
+  Heading,
   Show,
   SimpleGrid,
+  Spinner,
   useBreakpointValue,
 } from "@chakra-ui/react";
 import React, { useEffect, useState } from "react";
@@ -16,27 +18,59 @@ import Landing from "../Landing/Landing";
 import QuizCard from "@/components/home/QuizCard/QuizCard";
 import "./Home.css";
 import QuizPopup from "@/components/general/QuizPopup/QuizPopup";
+import QuizDetails from "@/components/general/QuizDetails/QuizDetails";
 
 type Quiz = {
   name: string;
   desc: string;
   duration: string;
+  code: string;
+  categories?: string[];
+  author?: string;
+  questions?: number;
 };
 
 const Home = () => {
   const isMobile = useBreakpointValue({ base: true, lg: false });
-  const [isQuizPopupShowing, setShowingQuizPopup] = useState(true);
+  const [isQuizPopupShowing, setShowingQuizPopup] = useState(false);
+  const [isQuizDetailsShowing, setShowingQuizDetails] = useState(false);
   const toggleQuizPopup = () => {
     setShowingQuizPopup(!isQuizPopupShowing);
   };
+  const toggleQuizDetailsPopup = () => {
+    setShowingQuizDetails(!isQuizDetailsShowing);
+  };
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [quizzesLoading, setQuizzesLoading] = useState(true);
+  const [selectedQuiz, setSelectedQuiz] = useState<Quiz>({
+    name: "",
+    desc: "",
+    duration: "",
+    code: "",
+    categories: [],
+    author: "",
+    questions: 0,
+  });
+  const [user, setUser] = useState<{ name: string; picture: string } | null>(
+    null
+  );
 
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
   useEffect(() => {
     fetch("https://rayquiza-backend.onrender.com/api/quizzes")
       .then((res) => res.json())
-      .then((data) => setQuizzes(data))
+      .then((data) => {
+        setQuizzes(data);
+        setQuizzesLoading(false);
+      })
       .catch((err) => console.error(err));
   }, []);
+
   return (
     <Container left="0px" margin="0" padding="0" height="60vh">
       <Grid
@@ -46,7 +80,10 @@ const Home = () => {
         }}
       >
         <GridItem area="nav" position={"sticky"} top="0px" zIndex={10}>
-          <NavBar></NavBar>
+          <NavBar
+            username={user?.name || ""}
+            profilePic={user?.picture || ""}
+          ></NavBar>
         </GridItem>
         <Show when={!isMobile}>
           <GridItem area="aside" bgColor={"gold"} width={"20vw"}>
@@ -62,6 +99,19 @@ const Home = () => {
           backgroundSize={"fit"}
           width={isMobile ? "100vw" : "80vw"}
         >
+          <Heading margin="3" size="5xl">
+            {quizzesLoading ? "Loading your quizzes..." : "Your Quizzes"}
+          </Heading>
+          {quizzesLoading && (
+            <Center>
+              <Spinner color="teal" size="lg" />
+            </Center>
+          )}
+          {!quizzesLoading && quizzes.length === 0 && (
+            <Center>
+              <Heading size="md">No quizzes available</Heading>
+            </Center>
+          )}
           <SimpleGrid columns={isMobile ? 1 : 4}>
             {quizzes.map((quiz, index) => (
               <QuizCard
@@ -69,16 +119,36 @@ const Home = () => {
                 name={quiz.name}
                 desc={quiz.desc}
                 duration={quiz.duration}
+                onClickTakeQuiz={() => {
+                  setSelectedQuiz(quiz);
+                  toggleQuizPopup();
+                }}
+                onClickViewDetails={() => {
+                  setSelectedQuiz(quiz);
+                  toggleQuizDetailsPopup();
+                }}
               ></QuizCard>
             ))}
           </SimpleGrid>
         </GridItem>
         {isQuizPopupShowing && (
           <QuizPopup
-            title="Hello world"
-            description="Hello jon"
+            title={selectedQuiz.name || "No name"}
+            description={selectedQuiz.desc || "No description"}
             onclose={toggleQuizPopup}
           ></QuizPopup>
+        )}
+        {isQuizDetailsShowing && (
+          <QuizDetails
+            title={selectedQuiz.name || "No name"}
+            description={selectedQuiz.desc || "No description"}
+            code={selectedQuiz.code || "No code"}
+            author={selectedQuiz.author || "Unknown"}
+            duration={selectedQuiz.duration || "0"}
+            categories={selectedQuiz.categories || []}
+            questions={selectedQuiz.questions || 0}
+            onclose={toggleQuizDetailsPopup}
+          ></QuizDetails>
         )}
       </Grid>
     </Container>

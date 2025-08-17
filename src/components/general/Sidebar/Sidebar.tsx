@@ -45,15 +45,42 @@ const Sidebar = ({ username }: Props) => {
       left="0px"
       centerContent={true}
     >
-      <HStack>
-        <FaUser size="20" />
-        <Heading>Hello, {username}!</Heading>
-      </HStack>
-
       <VStack width="100%" height="85vh">
-        <Button colorScheme="teal" variant="solid" width="100%">
-          Dashboard
-        </Button>
+        <VStack width="100%" align="stretch">
+          {["Quizzes", "Create Quiz", "Join using code", "Shop"].map(
+            (label, idx) => (
+              <Button
+                right={0}
+                margin="0px"
+                key={label}
+                width="100%"
+                variant="ghost"
+                onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                  const container = e.currentTarget.parentElement;
+                  if (!container) return;
+                  const buttons = Array.from(
+                    container.querySelectorAll("button")
+                  );
+                  buttons.forEach((b) => {
+                    (b as HTMLButtonElement).style.backgroundColor =
+                      "transparent";
+                    (b as HTMLButtonElement).style.color = "";
+                  });
+                  e.currentTarget.style.backgroundColor = "teal";
+                  e.currentTarget.style.color = "white";
+                }}
+                // make first item selected by default
+                style={
+                  idx === 0
+                    ? { backgroundColor: "teal", color: "white" }
+                    : { backgroundColor: "transparent" }
+                }
+              >
+                {label}
+              </Button>
+            )
+          )}
+        </VStack>
         <Button colorScheme="teal" variant="outline" width="100%">
           Settings
         </Button>

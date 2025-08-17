@@ -7,7 +7,7 @@ function ServerTest() {
   const [items, setItems] = useState<Item[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/items")
+    fetch("https://rayquiza-backend.onrender.com/api/items")
       .then((res) => res.json())
       .then((data) => setItems(data))
       .catch((err) => console.error(err));

@@ -46,6 +46,7 @@ app.post("/api/auth/google", async (req, res) => {
     }
 
     res.json({ message: "Login successful", user });
+    
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Google login failed" });

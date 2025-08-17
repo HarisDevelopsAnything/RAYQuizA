@@ -6,9 +6,17 @@ interface Props {
   name: string;
   desc: string;
   duration: string;
+  onClickTakeQuiz?: () => void;
+  onClickViewDetails?: () => void;
 }
 
-const QuizCard = ({ name, desc, duration }: Props) => {
+const QuizCard = ({
+  name,
+  desc,
+  duration,
+  onClickTakeQuiz,
+  onClickViewDetails,
+}: Props) => {
   const { colorMode, toggleColorMode } = useColorMode();
   return (
     <Card.Root
@@ -33,10 +41,18 @@ const QuizCard = ({ name, desc, duration }: Props) => {
       </Card.Body>
       <Card.Footer marginTop="10px">
         <ButtonGroup width={"100%"} marginTop="10px">
-          <Button variant={"solid"} colorPalette="teal">
+          <Button
+            variant={"solid"}
+            colorPalette="teal"
+            onClick={onClickTakeQuiz}
+          >
             Take quiz
           </Button>
-          <Button variant={"subtle"} colorPalette={"teal"}>
+          <Button
+            variant={"subtle"}
+            colorPalette={"teal"}
+            onClick={onClickViewDetails}
+          >
             View details
           </Button>
         </ButtonGroup>

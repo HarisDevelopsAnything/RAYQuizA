@@ -87,15 +87,11 @@ const Home = () => {
         </GridItem>
         <Show when={!isMobile}>
           <GridItem area="aside" bgColor={"gold"} width={"20vw"}>
-            <Sidebar username="Haris"></Sidebar>
+            <Sidebar></Sidebar>
           </GridItem>
         </Show>
         <GridItem
           area="main"
-          bgColor={"gray.800"}
-          backgroundImage={
-            "url('https://images.unsplash.com/photo-1677611998429-1baa4371456b?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTl8fGFic3RyYWN0JTIwZ3JlZW58ZW58MHx8MHx8fDA%3D')"
-          }
           backgroundSize={"fit"}
           width={isMobile ? "100vw" : "80vw"}
         >

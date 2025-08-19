@@ -16,7 +16,7 @@ const NavBar = ({ username, profilePic }: Props) => {
       {profilePic ? (
         <img
           src={profilePic}
-          alt={`${username ?? "User"} avatar`}
+          alt={username ? username[0] : "?"}
           className="nav-avatar"
         />
       ) : (

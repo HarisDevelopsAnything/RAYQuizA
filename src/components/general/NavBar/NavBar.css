@@ -11,7 +11,9 @@
 }
 .nav-avatar {
     height: 80%;
+    aspect-ratio: 1/1;
     border-radius: 50%;
     border: 5px solid white;
-    
+    align-content: center;
+    text-align: center;
 }

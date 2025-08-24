@@ -10,13 +10,23 @@ import JoinCode from "../JoinCode/JoinCode";
 import CreateQuiz from "./CreateQuiz/CreateQuiz";
 
 type Quiz = {
-  name: string;
-  desc: string;
-  duration: string;
-  code: string;
-  categories?: string[];
-  author?: string;
-  questions?: number;
+  _id: string;
+  title: string;
+  description: string;
+  categories: string[];
+  createdBy: string;
+  questions?: Array<{
+    question: string;
+    type: "text" | "image";
+    answerType: "single" | "multiple";
+    options: string[];
+    correctOption: number | number[];
+    imageUrl?: string;
+    points: number;
+    negativePoints: number;
+    timeLimit: number;
+  }>;
+  createdAt: string;
 };
 
 const Home = () => {
@@ -31,13 +41,13 @@ const Home = () => {
     setShowingQuizDetails(!isQuizDetailsShowing);
   };
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz>({
-    name: "",
-    desc: "",
-    duration: "",
-    code: "",
+    _id: "",
+    title: "",
+    description: "",
     categories: [],
-    author: "",
-    questions: 0,
+    createdBy: "",
+    questions: [],
+    createdAt: "",
   });
   const [user, setUser] = useState<{ name: string; picture: string } | null>(
     null
@@ -93,20 +103,28 @@ const Home = () => {
       </Flex>
       {isQuizPopupShowing && (
         <QuizPopup
-          title={selectedQuiz.name || "No name"}
-          description={selectedQuiz.desc || "No description"}
+          title={selectedQuiz.title || "No name"}
+          description={selectedQuiz.description || "No description"}
           onclose={toggleQuizPopup}
         ></QuizPopup>
       )}
       {isQuizDetailsShowing && (
         <QuizDetails
-          title={selectedQuiz.name || "No name"}
-          description={selectedQuiz.desc || "No description"}
-          code={selectedQuiz.code || "No code"}
-          author={selectedQuiz.author || "Unknown"}
-          duration={selectedQuiz.duration || "0"}
+          title={selectedQuiz.title || "No name"}
+          description={selectedQuiz.description || "No description"}
+          code={selectedQuiz._id || "No code"}
+          author={selectedQuiz.createdBy || "Unknown"}
+          duration={
+            selectedQuiz.questions && Array.isArray(selectedQuiz.questions)
+              ? `${selectedQuiz.questions.reduce((total, q) => total + (q.timeLimit || 30), 0)}s`
+              : "0s"
+          }
           categories={selectedQuiz.categories || []}
-          questions={selectedQuiz.questions || 0}
+          questions={
+            selectedQuiz.questions && Array.isArray(selectedQuiz.questions)
+              ? selectedQuiz.questions.length
+              : 0
+          }
           onclose={toggleQuizDetailsPopup}
         ></QuizDetails>
       )}

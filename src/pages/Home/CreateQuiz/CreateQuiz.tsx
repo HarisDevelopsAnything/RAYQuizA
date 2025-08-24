@@ -26,6 +26,8 @@ interface QuestionType {
 const CreateQuiz = () => {
   const [quizTitle, setQuizTitle] = React.useState("");
   const [description, setDescription] = React.useState("");
+  const [categories, setCategories] = React.useState<string[]>([]);
+  const [newCategory, setNewCategory] = React.useState("");
   const [questions, setQuestions] = React.useState<QuestionType[]>([
     {
       question: "",
@@ -46,6 +48,23 @@ const CreateQuiz = () => {
 
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDescription(e.target.value);
+  };
+
+  const handleNewCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewCategory(e.target.value);
+  };
+
+  const addCategory = () => {
+    if (newCategory.trim() && !categories.includes(newCategory.trim())) {
+      setCategories([...categories, newCategory.trim()]);
+      setNewCategory("");
+    }
+  };
+
+  const removeCategory = (index: number) => {
+    const updatedCategories = [...categories];
+    updatedCategories.splice(index, 1);
+    setCategories(updatedCategories);
   };
 
   const handleQuestionChange = (index: number, value: string) => {
@@ -119,6 +138,7 @@ const CreateQuiz = () => {
       const quizData = {
         title: quizTitle,
         description: description,
+        categories: categories,
         createdBy: localStorage.getItem("user") ? (JSON.parse(localStorage.getItem("user") || "{}")).name || "Anonymous" : "Anonymous",
         questions: questions
       };
@@ -139,6 +159,8 @@ const CreateQuiz = () => {
         // Reset form
         setQuizTitle('');
         setDescription('');
+        setCategories([]);
+        setNewCategory('');
         setQuestions([{
           question: "",
           type: "text",
@@ -231,6 +253,45 @@ const CreateQuiz = () => {
             onChange={handleDescriptionChange}
             placeholder="Enter quiz description"
           />
+          
+          <Text mb={2} mt={4} fontWeight="bold">
+            Categories
+          </Text>
+          <Flex mb={2} gap={2}>
+            <Input
+              value={newCategory}
+              onChange={handleNewCategoryChange}
+              placeholder="Add a category"
+              flex={1}
+            />
+            <Button colorPalette="blue" onClick={addCategory}>
+              <CgAdd />
+            </Button>
+          </Flex>
+          {categories.length > 0 && (
+            <Flex wrap="wrap" gap={2} mb={2}>
+              {categories.map((category, index) => (
+                <Flex
+                  key={index}
+                  alignItems="center"
+                  bg="blue.100"
+                  px={2}
+                  py={1}
+                  borderRadius="md"
+                  fontSize="sm"
+                >
+                  <Text mr={2}>{category}</Text>
+                  <Button
+                    size="xs"
+                    colorPalette="red"
+                    onClick={() => removeCategory(index)}
+                  >
+                    <MdDelete />
+                  </Button>
+                </Flex>
+              ))}
+            </Flex>
+          )}
         </Box>
 
         {questions.map((question, qIndex) => (

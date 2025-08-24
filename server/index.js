@@ -82,7 +82,7 @@ app.get("/api/quizzes", async (req, res) => {
 // ✅ Create Quiz Route
 app.post("/api/quizzes", async (req, res) => {
   try {
-    const { title, description, createdBy, questions } = req.body;
+    const { title, description, categories, createdBy, questions } = req.body;
     
     if (!title || !questions || questions.length === 0) {
       return res.status(400).json({ error: "Title and questions are required" });
@@ -91,7 +91,8 @@ app.post("/api/quizzes", async (req, res) => {
     const db = await getDb();
     const newQuiz = {
       title,
-      description: description || "", // Include description field
+      description: description || "",
+      categories: categories || [],
       createdBy: createdBy || "Anonymous",
       questions,
       createdAt: new Date(),

@@ -79,4 +79,31 @@ app.get("/api/quizzes", async (req, res) => {
   }
 });
 
+// ✅ Create Quiz Route
+app.post("/api/quizzes", async (req, res) => {
+  try {
+    const { title, questions } = req.body;
+    
+    if (!title || !questions || questions.length === 0) {
+      return res.status(400).json({ error: "Title and questions are required" });
+    }
+
+    const db = await getDb();
+    const newQuiz = {
+      title,
+      questions,
+      createdAt: new Date(),
+      createdBy: req.body.createdBy || "Anonymous", // You can modify this to get from auth
+    };
+
+    const result = await db.collection("Quizzes").insertOne(newQuiz);
+    const insertedQuiz = await db.collection("Quizzes").findOne({ _id: result.insertedId });
+    
+    res.status(201).json({ message: "Quiz created successfully", quiz: insertedQuiz });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to create quiz" });
+  }
+});
+
 app.listen(port, () => console.log("Server running on port 5000"));

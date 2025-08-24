@@ -18,6 +18,9 @@ interface QuestionType {
   options: string[];
   correctOption: number | number[];
   imageUrl?: string;
+  points: number;
+  negativePoints: number;
+  timeLimit: number;
 }
 
 const CreateQuiz = () => {
@@ -30,6 +33,9 @@ const CreateQuiz = () => {
       options: ["", "", "", ""],
       correctOption: 0,
       imageUrl: "",
+      points: 1,
+      negativePoints: 0,
+      timeLimit: 30,
     },
   ]);
 
@@ -72,6 +78,9 @@ const CreateQuiz = () => {
         options: ["", "", "", ""],
         correctOption: 0,
         imageUrl: "",
+        points: 1,
+        negativePoints: 0,
+        timeLimit: 30,
       },
     ]);
   };
@@ -82,9 +91,66 @@ const CreateQuiz = () => {
     setQuestions(updatedQuestions);
   };
 
-  const handleSubmit = () => {
-    // TODO: Submit quiz data to backend
-    console.log({ title: quizTitle, questions });
+  const handleSubmit = async () => {
+    try {
+      // Validate quiz data
+      if (!quizTitle.trim()) {
+        alert('Please enter a quiz title');
+        return;
+      }
+
+      const invalidQuestions = questions.filter(q => 
+        !q.question.trim() || 
+        q.options.some(opt => !opt.trim()) ||
+        (q.answerType === 'single' && typeof q.correctOption !== 'number') ||
+        (q.answerType === 'multiple' && (!Array.isArray(q.correctOption) || q.correctOption.length === 0))
+      );
+
+      if (invalidQuestions.length > 0) {
+        alert('Please fill in all questions, options, and select correct answers');
+        return;
+      }
+
+      const quizData = {
+        title: quizTitle,
+        questions: questions
+      };
+
+      const response = await fetch('https://rayquiza-backend.onrender.com/api/quizzes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(quizData),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Quiz created successfully:', result);
+        alert('Quiz created successfully!');
+        
+        // Reset form
+        setQuizTitle('');
+        setQuestions([{
+          question: "",
+          type: "text",
+          answerType: "single",
+          options: ["", "", "", ""],
+          correctOption: 0,
+          imageUrl: "",
+          points: 1,
+          negativePoints: 0,
+          timeLimit: 30,
+        }]);
+      } else {
+        const error = await response.json();
+        console.error('Failed to create quiz:', error);
+        alert('Failed to create quiz: ' + (error.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error creating quiz:', error);
+      alert('Error creating quiz. Please try again.');
+    }
   };
 
   const handleQuestionTypeChange = (index: number, type: "text" | "image") => {
@@ -106,6 +172,24 @@ const CreateQuiz = () => {
   const handleImageUrlChange = (index: number, url: string) => {
     const updatedQuestions = [...questions];
     updatedQuestions[index].imageUrl = url;
+    setQuestions(updatedQuestions);
+  };
+
+  const handlePointsChange = (index: number, points: number) => {
+    const updatedQuestions = [...questions];
+    updatedQuestions[index].points = points;
+    setQuestions(updatedQuestions);
+  };
+
+  const handleNegativePointsChange = (index: number, negativePoints: number) => {
+    const updatedQuestions = [...questions];
+    updatedQuestions[index].negativePoints = negativePoints;
+    setQuestions(updatedQuestions);
+  };
+
+  const handleTimeLimitChange = (index: number, timeLimit: number) => {
+    const updatedQuestions = [...questions];
+    updatedQuestions[index].timeLimit = timeLimit;
     setQuestions(updatedQuestions);
   };
 
@@ -243,6 +327,35 @@ const CreateQuiz = () => {
             </Box>
 
             <Box mb={4}>
+              <Heading size="md">Points for this question</Heading>
+              <Input 
+                type="number" 
+                placeholder="Points for this question" 
+                min="0" 
+                max="10" 
+                width="fit-content" 
+                value={question.points}
+                onChange={(e) => handlePointsChange(qIndex, parseInt(e.target.value) || 1)}
+              />
+              <Heading size="md">Negative points for this question</Heading>
+              <Input 
+                type="number" 
+                placeholder="Negative points for this question" 
+                min="0" 
+                max="10" 
+                width="fit-content" 
+                value={question.negativePoints}
+                onChange={(e) => handleNegativePointsChange(qIndex, parseInt(e.target.value) || 0)}
+              />
+              <Heading size="md">Time limit for this question</Heading>
+              <Input 
+                type="number" 
+                placeholder="Time limit (seconds)" 
+                min="0" 
+                width="fit-content" 
+                value={question.timeLimit}
+                onChange={(e) => handleTimeLimitChange(qIndex, parseInt(e.target.value) || 30)}
+              /> seconds
               <Text mb={2} fontWeight="bold">
                 Options
               </Text>
@@ -305,7 +418,6 @@ const CreateQuiz = () => {
             </Box>
           </Box>
         ))}
-
         <Flex justifyContent="space-between" mt={6}>
           <Button colorPalette="blue" variant="outline" onClick={addQuestion}>
             <CgAdd style={{ marginRight: "8px" }} />

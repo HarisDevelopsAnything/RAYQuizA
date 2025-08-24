@@ -25,6 +25,7 @@ interface QuestionType {
 
 const CreateQuiz = () => {
   const [quizTitle, setQuizTitle] = React.useState("");
+  const [description, setDescription] = React.useState("");
   const [questions, setQuestions] = React.useState<QuestionType[]>([
     {
       question: "",
@@ -41,6 +42,10 @@ const CreateQuiz = () => {
 
   const handleQuizTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuizTitle(e.target.value);
+  };
+
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDescription(e.target.value);
   };
 
   const handleQuestionChange = (index: number, value: string) => {
@@ -113,6 +118,8 @@ const CreateQuiz = () => {
 
       const quizData = {
         title: quizTitle,
+        description: description,
+        createdBy: localStorage.getItem("user") ? (JSON.parse(localStorage.getItem("user") || "{}")).name || "Anonymous" : "Anonymous",
         questions: questions
       };
 
@@ -131,6 +138,7 @@ const CreateQuiz = () => {
         
         // Reset form
         setQuizTitle('');
+        setDescription('');
         setQuestions([{
           question: "",
           type: "text",
@@ -214,6 +222,14 @@ const CreateQuiz = () => {
             value={quizTitle}
             onChange={handleQuizTitleChange}
             placeholder="Enter quiz title"
+          />
+          <Text mb={2} fontWeight="bold">
+            Quiz Description
+          </Text>
+          <Input
+            value={description}
+            onChange={handleDescriptionChange}
+            placeholder="Enter quiz description"
           />
         </Box>
 

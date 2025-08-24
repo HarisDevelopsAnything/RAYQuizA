@@ -11,6 +11,16 @@ import React from "react";
 import { CgAdd } from "react-icons/cg";
 import { MdDelete } from "react-icons/md";
 
+// Function to generate a unique 6-digit alphanumeric code
+const generateQuizCode = (): string => {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < 6; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+};
+
 interface QuestionType {
   question: string;
   type: "text" | "image";
@@ -139,6 +149,7 @@ const CreateQuiz = () => {
         title: quizTitle,
         description: description,
         categories: categories,
+        code: generateQuizCode(),
         createdBy: localStorage.getItem("user") ? (JSON.parse(localStorage.getItem("user") || "{}")).name || "Anonymous" : "Anonymous",
         questions: questions
       };
@@ -154,7 +165,8 @@ const CreateQuiz = () => {
       if (response.ok) {
         const result = await response.json();
         console.log('Quiz created successfully:', result);
-        alert('Quiz created successfully!');
+        const createdQuiz = result.quiz;
+        alert(`Quiz created successfully!\nQuiz Code: ${createdQuiz.code}\n\nShare this code with participants to let them join your quiz.`);
         
         // Reset form
         setQuizTitle('');

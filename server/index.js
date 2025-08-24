@@ -82,17 +82,36 @@ app.get("/api/quizzes", async (req, res) => {
 // ✅ Create Quiz Route
 app.post("/api/quizzes", async (req, res) => {
   try {
-    const { title, description, categories, createdBy, questions } = req.body;
+    const { title, description, categories, code, createdBy, questions } = req.body;
     
     if (!title || !questions || questions.length === 0) {
       return res.status(400).json({ error: "Title and questions are required" });
     }
 
     const db = await getDb();
+    
+    // Ensure unique index on code field for better performance (run this once in MongoDB)
+    // db.collection("Quizzes").createIndex({ code: 1 }, { unique: true })
+    
+    // Check if the code already exists and regenerate if needed
+    let uniqueCode = code;
+    let codeExists = await db.collection("Quizzes").findOne({ code: uniqueCode });
+    
+    // If code exists, generate a new one (this is a backup, frontend should handle uniqueness)
+    while (codeExists) {
+      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      uniqueCode = '';
+      for (let i = 0; i < 6; i++) {
+        uniqueCode += characters.charAt(Math.floor(Math.random() * characters.length));
+      }
+      codeExists = await db.collection("Quizzes").findOne({ code: uniqueCode });
+    }
+
     const newQuiz = {
       title,
       description: description || "",
       categories: categories || [],
+      code: uniqueCode,
       createdBy: createdBy || "Anonymous",
       questions,
       createdAt: new Date(),
@@ -105,6 +124,24 @@ app.post("/api/quizzes", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to create quiz" });
+  }
+});
+
+// ✅ Get Quiz by Code Route
+app.get("/api/quizzes/code/:code", async (req, res) => {
+  try {
+    const { code } = req.params;
+    const db = await getDb();
+    const quiz = await db.collection("Quizzes").findOne({ code: code.toUpperCase() });
+    
+    if (!quiz) {
+      return res.status(404).json({ error: "Quiz not found with this code" });
+    }
+    
+    res.json(quiz);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch quiz" });
   }
 });
 

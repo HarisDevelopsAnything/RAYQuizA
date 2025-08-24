@@ -19,6 +19,7 @@ type Quiz = {
   title: string;
   description: string;
   categories: string[];
+  code: string;
   createdBy: string;
   questions?: Array<{
     question: string;
@@ -69,10 +70,11 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
           const totalDuration = questions.reduce((total, question) => total + (question.timeLimit || 30), 0);
           const durationText = `${totalDuration}s (${questions.length} questions)`;
           
-          // Ensure categories is always an array
+          // Ensure categories is always an array and code exists
           const safeQuiz = {
             ...quiz,
-            categories: Array.isArray(quiz.categories) ? quiz.categories : []
+            categories: Array.isArray(quiz.categories) ? quiz.categories : [],
+            code: quiz.code || "NO_CODE"
           };
           
           return (

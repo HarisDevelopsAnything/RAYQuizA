@@ -14,6 +14,7 @@ type Quiz = {
   title: string;
   description: string;
   categories: string[];
+  code: string;
   createdBy: string;
   questions?: Array<{
     question: string;
@@ -45,6 +46,7 @@ const Home = () => {
     title: "",
     description: "",
     categories: [],
+    code: "",
     createdBy: "",
     questions: [],
     createdAt: "",
@@ -112,7 +114,7 @@ const Home = () => {
         <QuizDetails
           title={selectedQuiz.title || "No name"}
           description={selectedQuiz.description || "No description"}
-          code={selectedQuiz._id || "No code"}
+          code={selectedQuiz.code || "No code"}
           author={selectedQuiz.createdBy || "Unknown"}
           duration={
             selectedQuiz.questions && Array.isArray(selectedQuiz.questions)

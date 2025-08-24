@@ -8,6 +8,7 @@ import Home from "./pages/Home/Home";
 import ServerTest from "./components/servertest";
 import LoginButton from "./components/LoginButton";
 import Login from "./pages/Login/Login";
+import JoinCode from "./pages/JoinCode/JoinCode";
 
 const App = () => {
   return (
@@ -18,6 +19,7 @@ const App = () => {
           <Route path="/home" element={<Home />}></Route>
           <Route path="/login" element={<Login />}></Route>
           <Route path="/server-test" element={<ServerTest />}></Route>
+          <Route path="/join" element={<JoinCode />}></Route>
         </Routes>
       </BrowserRouter>
     </>

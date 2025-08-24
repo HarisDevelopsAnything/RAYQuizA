@@ -2,20 +2,23 @@ import { Button, Container, Spacer, VStack } from "@chakra-ui/react";
 import React from "react";
 import { IoLogOut } from "react-icons/io5";
 
-const Sidebar = () => {
+interface Props {
+  setCurrentPage: (page: string) => void;
+}
+
+const Sidebar = ({ setCurrentPage }: Props) => {
   return (
     <Container
       bgColor={"bg.subtle"}
-      height="92vh"
+      height="100%"
       width="100%"
-      position={"relative"}
       padding="0"
-      left="0px"
       centerContent={true}
+      id="sticky-sidebar"
     >
       <VStack
         width="100%"
-        height="85vh"
+        height="100%"
         align="stretch"
         padding="0px"
         justifyContent={"space-evenly"}
@@ -43,6 +46,8 @@ const Sidebar = () => {
                   });
                   e.currentTarget.style.backgroundColor = "teal";
                   e.currentTarget.style.color = "white";
+                  // add navigation here
+                  setCurrentPage(label);
                 }}
                 // make first item selected by default
                 style={

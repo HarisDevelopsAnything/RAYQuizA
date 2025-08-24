@@ -22,19 +22,20 @@ const QuizCard = ({
     <Card.Root
       margin={"10px"}
       padding={"5px"}
-      border={"none"}
       borderRadius={16}
       backdropFilter={"blur(5px)"}
       backgroundColor={
-        colorMode == "light" ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.8)"
+        //colorMode == "light" ? "rgba(80,80,80,0.5)" : "rgba(0,0,0,0.8)"
+        "bg.subtle"
       }
+      borderColor={colorMode == "light" ? "blackAlpha.300" : "whiteAlpha.300"}
       color={colorMode == "light" ? "black" : "white"}
     >
       <Center>
         <Card.Title>{name}</Card.Title>
       </Center>
       <hr></hr>
-      <Card.Body color="fg.subtle">
+      <Card.Body color={colorMode == "light" ? "black" : "white"}>
         {desc}
         <br />
         {duration}

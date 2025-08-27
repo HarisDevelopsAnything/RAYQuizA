@@ -9,7 +9,7 @@ const Profile = () => {
   const [currPage, setCurrPage] = useState(0);
 
   return (
-    <div id="root">
+    <div id="profile-root">
         <Box width="20%" backgroundColor="bg.emphasized" height="100%" display="flex" flexDirection={"column"}>
             <Button className="sidebar-btn" variant="ghost" onClick={(e)=>{setCurrPage(0); e.currentTarget.style.backgroundColor="teal"}}><CgProfile/>Overview</Button>
             <Button className="sidebar-btn" variant="ghost" onClick={()=>setCurrPage(1)}><GrUpdate/>Update profile</Button>

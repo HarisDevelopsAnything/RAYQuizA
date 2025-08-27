@@ -21,7 +21,7 @@ const QuizCard = ({
   return (
     <Card.Root
       margin={"10px"}
-      padding={"5px"}
+      padding={"0px"}
       borderRadius={16}
       backdropFilter={"blur(5px)"}
       backgroundColor={
@@ -40,12 +40,16 @@ const QuizCard = ({
         <br />
         {duration}
       </Card.Body>
-      <Card.Footer marginTop="10px">
-        <ButtonGroup width={"100%"} marginTop="10px">
+      <Card.Footer marginTop="10px" margin="0px" padding="0">
+        <ButtonGroup width={"100%"} marginTop="10px" margin="0px" gap="0" borderBottomRadius={"5px"}>
           <Button
             variant={"solid"}
             colorPalette="teal"
             onClick={onClickTakeQuiz}
+            margin="0px"
+            width="50%"
+            borderRadius="0"
+            borderBottomLeftRadius={"10px"}
           >
             Take quiz
           </Button>
@@ -53,6 +57,10 @@ const QuizCard = ({
             variant={"subtle"}
             colorPalette={"teal"}
             onClick={onClickViewDetails}
+            margin="0px"
+            width="50%"
+            borderRadius={"0"}
+            borderBottomRightRadius={"10px"}
           >
             View details
           </Button>

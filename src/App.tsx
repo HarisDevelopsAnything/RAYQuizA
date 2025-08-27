@@ -9,6 +9,7 @@ import ServerTest from "./components/servertest";
 import LoginButton from "./components/LoginButton";
 import Login from "./pages/Login/Login";
 import JoinCode from "./pages/JoinCode/JoinCode";
+import Profile from "./pages/Profile/Profile";
 
 const App = () => {
   return (
@@ -20,6 +21,7 @@ const App = () => {
           <Route path="/login" element={<Login />}></Route>
           <Route path="/server-test" element={<ServerTest />}></Route>
           <Route path="/join" element={<JoinCode />}></Route>
+          <Route path="/profile" element={<Profile />}></Route>
         </Routes>
       </BrowserRouter>
     </>

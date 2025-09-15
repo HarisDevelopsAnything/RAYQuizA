@@ -1,15 +1,12 @@
-import React, { useState } from "react";
 import Landing from "./pages/Landing/Landing";
 import "./App.css";
-import Footer from "./components/general/Footer/Footer";
-import TopBar from "./components/general/TopBar/TopBar";
-import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Home from "./pages/Home/Home";
 import ServerTest from "./components/servertest";
-import LoginButton from "./components/LoginButton";
 import Login from "./pages/Login/Login";
 import JoinCode from "./pages/JoinCode/JoinCode";
 import Profile from "./pages/Profile/Profile";
+import QuizPage from "./pages/QuizPage/QuizPage";
 
 const App = () => {
   return (
@@ -22,6 +19,7 @@ const App = () => {
           <Route path="/server-test" element={<ServerTest />}></Route>
           <Route path="/join" element={<JoinCode />}></Route>
           <Route path="/profile" element={<Profile />}></Route>
+          <Route path="/quiz/:quizId" element={<QuizPage />}></Route>
         </Routes>
       </BrowserRouter>
     </>

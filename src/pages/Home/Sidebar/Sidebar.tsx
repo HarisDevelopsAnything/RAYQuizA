@@ -24,7 +24,7 @@ const Sidebar = ({ setCurrentPage }: Props) => {
         justifyContent={"space-evenly"}
       >
         <VStack width="100%" align="stretch" padding="0px" margin="0">
-          {["Quizzes", "Create Quiz", "Join using code", "Shop"].map(
+          {["Quizzes", "Create Quiz", "Join using code"].map(
             (label, idx) => (
               <Button
                 right={0}

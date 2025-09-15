@@ -28,7 +28,7 @@ const Profile = () => {
 
 const MyProfile = () => {
   return (
-    <div>Profile</div>
+    <div></div>
   )
 }
 

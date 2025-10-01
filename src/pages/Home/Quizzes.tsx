@@ -7,6 +7,7 @@ import {
   useBreakpointValue,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface Props {
   quizPopup: (value: boolean) => void;
@@ -39,6 +40,7 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
   const isMobile = useBreakpointValue({ base: true, lg: false });
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [quizzesLoading, setQuizzesLoading] = useState(true);
+  const navigate = useNavigate();
   useEffect(() => {
     fetch("https://rayquiza-backend.onrender.com/api/quizzes")
       .then((res) => res.json())
@@ -84,8 +86,14 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
               desc={quiz.description || "No description available"}
               duration={durationText}
               onClickTakeQuiz={() => {
-                setSelectedQuiz(safeQuiz);
-                quizPopup(true);
+                // Navigate to quiz page using the quiz code
+                if (safeQuiz.code && safeQuiz.code !== "NO_CODE") {
+                  navigate(`/quiz/${safeQuiz.code}`);
+                } else {
+                  // Fallback: set selected quiz and show popup if no code
+                  setSelectedQuiz(safeQuiz);
+                  quizPopup(true);
+                }
               }}
               onClickViewDetails={() => {
                 setSelectedQuiz(safeQuiz);

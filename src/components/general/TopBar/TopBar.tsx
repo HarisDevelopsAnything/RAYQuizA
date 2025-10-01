@@ -30,7 +30,7 @@ const TopBar = ({ onClickAbout, darkMode }: Props) => {
       className="glass-card"
     >
       <Button onClick={() => onClickAbout()} borderRadius={"10px"}>
-        Show help
+        Support
       </Button>
       <Spacer />
       <ButtonGroup>

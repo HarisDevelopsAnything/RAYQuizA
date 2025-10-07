@@ -1,4 +1,3 @@
-import React from "react";
 import "./QuizPopup.css";
 import { Button, ButtonGroup, Heading } from "@chakra-ui/react";
 import { useColorMode } from "@/components/ui/color-mode";
@@ -8,8 +7,8 @@ interface Props {
   duration?: string;
   onclose: () => void;
 }
-const QuizPopup = ({ title, description, duration, onclose }: Props) => {
-  const { colorMode, toggleColorMode } = useColorMode();
+const QuizPopup = ({ title, description, onclose }: Props) => {
+  const { colorMode } = useColorMode();
   return (
     <div
       id="popup"

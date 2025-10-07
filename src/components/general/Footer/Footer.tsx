@@ -44,7 +44,7 @@ const footerData = [
   },
 ];
 
-const APP_VERSION = "v1.0.0";
+// const APP_VERSION = "v1.0.0";
 
 const Footer = () => {
   return (

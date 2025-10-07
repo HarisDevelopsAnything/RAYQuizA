@@ -1,6 +1,5 @@
 import { useColorMode } from "@/components/ui/color-mode";
 import { Button, ButtonGroup, Card, Center } from "@chakra-ui/react";
-import React from "react";
 
 interface Props {
   name: string;
@@ -17,7 +16,7 @@ const QuizCard = ({
   onClickTakeQuiz,
   onClickViewDetails,
 }: Props) => {
-  const { colorMode, toggleColorMode } = useColorMode();
+  const { colorMode } = useColorMode();
   return (
     <Card.Root
       margin={"10px"}
@@ -41,7 +40,13 @@ const QuizCard = ({
         {duration}
       </Card.Body>
       <Card.Footer marginTop="10px" margin="0px" padding="0">
-        <ButtonGroup width={"100%"} marginTop="10px" margin="0px" gap="0" borderBottomRadius={"5px"}>
+        <ButtonGroup
+          width={"100%"}
+          marginTop="10px"
+          margin="0px"
+          gap="0"
+          borderBottomRadius={"5px"}
+        >
           <Button
             variant={"solid"}
             colorPalette="teal"

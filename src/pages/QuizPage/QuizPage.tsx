@@ -24,9 +24,17 @@ interface Props {
   totalQuestions?: number;
 }
 
-function QuizPage({ question, answerType, type, options, image, timing, totalQuestions }: Props) {
+function QuizPage({
+  question,
+  answerType,
+  type,
+  options,
+  image,
+  timing,
+  totalQuestions,
+}: Props) {
   const { quizId } = useParams<{ quizId: string }>();
-  const [ind, setInd] = useState(0);
+  const [ind] = useState(0);
   const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +59,16 @@ function QuizPage({ question, answerType, type, options, image, timing, totalQue
       });
       setLoading(false);
     }
-  }, [quizId, question, answerType, type, options, image, timing, totalQuestions]);
+  }, [
+    quizId,
+    question,
+    answerType,
+    type,
+    options,
+    image,
+    timing,
+    totalQuestions,
+  ]);
 
   const handleAnswerSelect = (answerIndex: number) => {
     if (!quizData) return;
@@ -123,45 +140,49 @@ function QuizPage({ question, answerType, type, options, image, timing, totalQue
     try {
       setLoading(true);
       setError(null);
-      
+
       console.log(`Attempting to fetch quiz with code: ${id.toUpperCase()}`);
       const apiUrl = `https://rayquiza-backend.onrender.com/api/quizzes/code/${id.toUpperCase()}`;
       console.log(`API URL: ${apiUrl}`);
-      
+
       const response = await fetch(apiUrl, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         // Add timeout to catch slow responses
-        signal: AbortSignal.timeout(30000) // 30 second timeout
+        signal: AbortSignal.timeout(30000), // 30 second timeout
       });
-      
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
-      
+
+      console.log("Response status:", response.status);
+      console.log("Response ok:", response.ok);
+
       if (!response.ok) {
         if (response.status === 404) {
-          throw new Error('Quiz not found. Please check the code and try again.');
+          throw new Error(
+            "Quiz not found. Please check the code and try again."
+          );
         } else if (response.status >= 500) {
-          throw new Error('Server error. Please try again later.');
+          throw new Error("Server error. Please try again later.");
         } else {
-          throw new Error(`Failed to fetch quiz data (Status: ${response.status})`);
+          throw new Error(
+            `Failed to fetch quiz data (Status: ${response.status})`
+          );
         }
       }
-      
+
       const quiz = await response.json();
-      console.log('Received quiz data:', quiz);
-      
+      console.log("Received quiz data:", quiz);
+
       // Validate that we have the expected data structure
       if (!quiz || !quiz.questions || !Array.isArray(quiz.questions)) {
-        throw new Error('Invalid quiz data received from server');
+        throw new Error("Invalid quiz data received from server");
       }
-      
+
       if (quiz.questions.length === 0) {
-        throw new Error('Quiz has no questions');
+        throw new Error("Quiz has no questions");
       }
-      
+
       // Transform the server response to match our QuizData interface
       const transformedData: QuizData = {
         question: quiz.questions?.map((q: any) => q.questionText || q.question || "") || [],
@@ -183,22 +204,29 @@ function QuizPage({ question, answerType, type, options, image, timing, totalQue
         }) || [],
         totalQuestions: quiz.questions?.length || 0,
       };
-      
-      console.log('Transformed quiz data:', transformedData);
+
+      console.log("Transformed quiz data:", transformedData);
       setQuizData(transformedData);
     } catch (err) {
-      console.error('Error fetching quiz data:', err);
-      
+      console.error("Error fetching quiz data:", err);
+
       if (err instanceof Error) {
-        if (err.name === 'AbortError') {
-          setError('Request timed out. Please check your internet connection and try again.');
-        } else if (err.message.includes('NetworkError') || err.message.includes('Failed to fetch')) {
-          setError('Network error. Please check your internet connection and try again.');
+        if (err.name === "AbortError") {
+          setError(
+            "Request timed out. Please check your internet connection and try again."
+          );
+        } else if (
+          err.message.includes("NetworkError") ||
+          err.message.includes("Failed to fetch")
+        ) {
+          setError(
+            "Network error. Please check your internet connection and try again."
+          );
         } else {
           setError(err.message);
         }
       } else {
-        setError('An unexpected error occurred while fetching quiz data');
+        setError("An unexpected error occurred while fetching quiz data");
       }
     } finally {
       setLoading(false);
@@ -210,7 +238,7 @@ function QuizPage({ question, answerType, type, options, image, timing, totalQue
       <div className="page">
         <p className="webname">RAYQuizA!</p>
         <div className="quizenv">
-          <div style={{ textAlign: 'center', padding: '2rem' }}>
+          <div style={{ textAlign: "center", padding: "2rem" }}>
             <p>Loading quiz...</p>
           </div>
         </div>
@@ -223,8 +251,8 @@ function QuizPage({ question, answerType, type, options, image, timing, totalQue
       <div className="page">
         <p className="webname">RAYQuizA!</p>
         <div className="quizenv">
-          <div style={{ textAlign: 'center', padding: '2rem' }}>
-            <p>Error: {error || 'Quiz not found or has no questions'}</p>
+          <div style={{ textAlign: "center", padding: "2rem" }}>
+            <p>Error: {error || "Quiz not found or has no questions"}</p>
           </div>
         </div>
       </div>
@@ -244,6 +272,11 @@ function QuizPage({ question, answerType, type, options, image, timing, totalQue
           onAnswerSelect={handleAnswerSelect}
           showFeedback={showFeedback}
           isCorrect={isAnswerCorrect()}
+        <QuizOps
+          question={quizData.question[ind]}
+          type={quizData.type[ind]}
+          image={quizData.image[ind]}
+          options={quizData.options[ind]}
         />
       </div>
       <div className="footer">
@@ -252,6 +285,8 @@ function QuizPage({ question, answerType, type, options, image, timing, totalQue
           <button className="nextbtn" onClick={handleNext}>
             {ind < quizData.totalQuestions - 1 ? "Next" : "Finish"}
           </button>
+        {quizData.type[ind] != "single" && (
+          <button className="nextbtn">Next</button>
         )}
       </div>
     </div>

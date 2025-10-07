@@ -1,8 +1,5 @@
 import { Heading, HStack, Spacer } from "@chakra-ui/react";
-import React from "react";
-import { RiProfileFill } from "react-icons/ri";
 import "./NavBar.css";
-import { MdPhoneAndroid } from "react-icons/md";
 import { FaUser } from "react-icons/fa6";
 import ThemeSwitch from "@/components/ui/ThemeSwitch";
 import { useState } from "react";

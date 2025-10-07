@@ -1,14 +1,11 @@
-import { Center } from '@chakra-ui/react'
-import React from 'react'
+import { Center } from "@chakra-ui/react";
 
 const Code = () => {
   return (
     <>
-         <Center>
-            Hello
-         </Center>
+      <Center>Hello</Center>
     </>
-  )
-}
+  );
+};
 
-export default Code
+export default Code;

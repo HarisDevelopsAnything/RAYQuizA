@@ -1,5 +1,6 @@
 import { GoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
+import { toaster } from "@/components/ui/toaster";
 
 export default function LoginTest() {
   const navigate = useNavigate();
@@ -18,7 +19,20 @@ export default function LoginTest() {
     if (data.message === "Login successful") {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user)); // save user
-      navigate("/home");
+      toaster.create({
+        title: "Login Successful",
+        description: `Welcome, ${data.user.name}!`,
+        type: "success",
+        duration: 3000,
+      });
+      setTimeout(() => navigate("/home"), 1000);
+    } else {
+      toaster.create({
+        title: "Login Failed",
+        description: "Could not login with Google",
+        type: "error",
+        duration: 3000,
+      });
     }
   };
   return (
@@ -28,7 +42,15 @@ export default function LoginTest() {
           handleLogin(credentialResponse.credential);
         }
       }}
-      onError={() => console.log("Login Failed")}
+      onError={() => {
+        console.log("Login Failed");
+        toaster.create({
+          title: "Login Failed",
+          description: "Google login failed. Please try again.",
+          type: "error",
+          duration: 3000,
+        });
+      }}
     />
   );
 }

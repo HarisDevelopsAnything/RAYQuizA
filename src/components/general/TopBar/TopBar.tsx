@@ -32,7 +32,7 @@ const TopBar = ({ onClickAbout }: Props) => {
       className="glass-card"
     >
       <Button onClick={() => onClickAbout()} borderRadius={"10px"}>
-        Show help
+        Support
       </Button>
       <Spacer />
       <ButtonGroup>
@@ -40,6 +40,8 @@ const TopBar = ({ onClickAbout }: Props) => {
           darkMode={isDarkMode}
           onClick={() => setMode()}
         ></ThemeSwitch>
+        <Button variant="solid" colorPalette={"teal"} borderRadius={"10px"} onClick={()=> navigate("/login")}>
+          Login/Signup
         <Button
           variant="solid"
           colorPalette={"teal"}

@@ -10,6 +10,7 @@ interface QuizData {
   options: Array<Array<string>>;
   image: Array<string>;
   timing: Array<number>;
+  correctAnswers: Array<number[]>; // Added to track correct answers
   totalQuestions: number;
 }
 
@@ -37,6 +38,9 @@ function QuizPage({
   const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [userAnswers, setUserAnswers] = useState<number[][]>([]);
 
   useEffect(() => {
     if (quizId) {
@@ -50,6 +54,7 @@ function QuizPage({
         options,
         image,
         timing: timing || [],
+        correctAnswers: [], // Initialize with empty array for props-based quizzes
         totalQuestions: totalQuestions || question.length,
       });
       setLoading(false);
@@ -64,6 +69,72 @@ function QuizPage({
     timing,
     totalQuestions,
   ]);
+
+  const handleAnswerSelect = (answerIndex: number) => {
+    if (!quizData) return;
+
+    if (quizData.type[ind] === "single") {
+      // Single answer - replace selection and auto-submit
+      setSelectedAnswers([answerIndex]);
+      
+      // Auto-submit after a short delay for single choice questions
+      setTimeout(() => {
+        handleNext();
+      }, 500); // 500ms delay to show the selection before proceeding
+    } else {
+      // Multiple answers - toggle selection
+      setSelectedAnswers(prev => 
+        prev.includes(answerIndex) 
+          ? prev.filter(a => a !== answerIndex)
+          : [...prev, answerIndex]
+      );
+    }
+  };
+
+  const handleNext = () => {
+    if (!quizData) return;
+
+    // Store current answers
+    const newUserAnswers = [...userAnswers];
+    newUserAnswers[ind] = selectedAnswers;
+    setUserAnswers(newUserAnswers);
+
+    // Show feedback for current question
+    setShowFeedback(true);
+
+    // After showing feedback, move to next question
+    setTimeout(() => {
+      if (ind < quizData.totalQuestions - 1) {
+        setInd(ind + 1);
+        setSelectedAnswers([]);
+        setShowFeedback(false);
+      } else {
+        // Quiz completed
+        alert("Quiz completed!");
+      }
+    }, 2000); // Show feedback for 2 seconds
+  };
+
+  const isAnswerCorrect = () => {
+    if (!quizData || !quizData.correctAnswers || !quizData.correctAnswers[ind]) return false;
+    
+    const correctAnswers = quizData.correctAnswers[ind];
+    
+    // Ensure correctAnswers is an array
+    let correctAnswersArray: number[];
+    if (Array.isArray(correctAnswers)) {
+      correctAnswersArray = correctAnswers;
+    } else if (typeof correctAnswers === 'number') {
+      correctAnswersArray = [correctAnswers];
+    } else {
+      return false; // Invalid correctAnswers format
+    }
+    
+    const sortedSelected = [...selectedAnswers].sort();
+    const sortedCorrect = [...correctAnswersArray].sort();
+    
+    return JSON.stringify(sortedSelected) === JSON.stringify(sortedCorrect);
+  };
 
   const fetchQuizData = async (id: string) => {
     try {
@@ -114,12 +185,23 @@ function QuizPage({
 
       // Transform the server response to match our QuizData interface
       const transformedData: QuizData = {
-        question: quiz.questions?.map((q: any) => q.questionText) || [],
+        question: quiz.questions?.map((q: any) => q.questionText || q.question || "") || [],
         answerType: quiz.questions?.map((q: any) => q.answerType) || [],
-        type: quiz.questions?.map((q: any) => q.type || "multi") || [],
+        type: quiz.questions?.map((q: any) => q.answerType || q.type || "single") || [],
         options: quiz.questions?.map((q: any) => q.options || []) || [],
-        image: quiz.questions?.map((q: any) => q.image || "") || [],
-        timing: quiz.questions?.map((q: any) => q.timing || 30) || [],
+        image: quiz.questions?.map((q: any) => q.imageUrl || q.image || "") || [],
+        timing: quiz.questions?.map((q: any) => q.timeLimit || q.timing || 30) || [],
+        correctAnswers: quiz.questions?.map((q: any) => {
+          const correctOption = q.correctOption || q.correctAnswers || q.correctAnswer;
+          // Ensure it's always an array
+          if (Array.isArray(correctOption)) {
+            return correctOption;
+          } else if (typeof correctOption === 'number') {
+            return [correctOption];
+          } else {
+            return [0]; // Default fallback
+          }
+        }) || [],
         totalQuestions: quiz.questions?.length || 0,
       };
 
@@ -181,6 +263,15 @@ function QuizPage({
     <div className="page">
       <p className="webname">RAYQuizA!</p>
       <div className="quizenv">
+        <QuizOps 
+          question={quizData.question[ind]} 
+          type={quizData.type[ind]} 
+          image={quizData.image[ind]} 
+          options={quizData.options[ind]}
+          selectedAnswers={selectedAnswers}
+          onAnswerSelect={handleAnswerSelect}
+          showFeedback={showFeedback}
+          isCorrect={isAnswerCorrect()}
         <QuizOps
           question={quizData.question[ind]}
           type={quizData.type[ind]}
@@ -190,6 +281,10 @@ function QuizPage({
       </div>
       <div className="footer">
         <p></p>
+        {quizData.type[ind] === "multiple" && (
+          <button className="nextbtn" onClick={handleNext}>
+            {ind < quizData.totalQuestions - 1 ? "Next" : "Finish"}
+          </button>
         {quizData.type[ind] != "single" && (
           <button className="nextbtn">Next</button>
         )}

@@ -7,6 +7,7 @@ import Login from "./pages/Login/Login";
 import JoinCode from "./pages/JoinCode/JoinCode";
 import Profile from "./pages/Profile/Profile";
 import QuizPage from "./pages/QuizPage/QuizPage";
+import Support from "./pages/Support/Support";
 
 const App = () => {
   return (
@@ -19,6 +20,7 @@ const App = () => {
           <Route path="/server-test" element={<ServerTest />}></Route>
           <Route path="/join" element={<JoinCode />}></Route>
           <Route path="/profile" element={<Profile />}></Route>
+          <Route path="/support" element={<Support />}></Route>
           <Route path="/quiz/:quizId" element={<QuizPage />}></Route>
         </Routes>
       </BrowserRouter>

@@ -1,5 +1,5 @@
 import { Heading, Button } from '@chakra-ui/react'
-import React from 'react'
+// Support page
 import TypewriterComponent from 'typewriter-effect'
 
 const Support = () => {

@@ -1,5 +1,5 @@
-import { Box, Button, Heading, Spacer } from '@chakra-ui/react'
-import React, { useState } from 'react'
+import { Box, Button, Spacer } from '@chakra-ui/react'
+import { useState } from 'react'
 import './Profile.css'
 import { CgProfile } from 'react-icons/cg'
 import { GrUpdate } from 'react-icons/gr'

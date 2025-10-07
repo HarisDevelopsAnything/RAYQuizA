@@ -1,4 +1,3 @@
-import React from "react";
 import "./QuizDetails.css";
 import { Button, ButtonGroup, Heading } from "@chakra-ui/react";
 import { useColorMode } from "@/components/ui/color-mode";
@@ -22,7 +21,7 @@ const QuizDetails = ({
   categories,
   onclose,
 }: Props) => {
-  const { colorMode, toggleColorMode } = useColorMode();
+  const { colorMode } = useColorMode();
   return (
     <div
       id="popup"

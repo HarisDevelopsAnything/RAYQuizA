@@ -1,4 +1,4 @@
-import React from 'react'
+// Scoreboard component
 
 const Scoreboard = () => {
   return (

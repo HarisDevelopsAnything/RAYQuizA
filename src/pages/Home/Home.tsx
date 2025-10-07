@@ -16,6 +16,7 @@ type Quiz = {
   categories: string[];
   code: string;
   createdBy: string;
+  createdByEmail?: string;
   questions?: Array<{
     question: string;
     type: "text" | "image";
@@ -118,7 +119,10 @@ const Home = () => {
           author={selectedQuiz.createdBy || "Unknown"}
           duration={
             selectedQuiz.questions && Array.isArray(selectedQuiz.questions)
-              ? `${selectedQuiz.questions.reduce((total, q) => total + (q.timeLimit || 30), 0)}s`
+              ? `${selectedQuiz.questions.reduce(
+                  (total, q) => total + (q.timeLimit || 30),
+                  0
+                )}s`
               : "0s"
           }
           categories={selectedQuiz.categories || []}

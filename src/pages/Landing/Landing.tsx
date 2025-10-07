@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import "@/index.css";
 import {
   Button,
@@ -6,10 +6,6 @@ import {
   Text,
   Container,
   Highlight,
-  ButtonGroup,
-  Alert,
-  Spinner,
-  AlertDescription,
   SimpleGrid,
 } from "@chakra-ui/react";
 import { FaArrowRight } from "react-icons/fa";
@@ -17,12 +13,8 @@ import Interesting from "@/components/general/Interesting/Interesting";
 import { useNavigate } from "react-router-dom";
 import TopBar from "@/components/general/TopBar/TopBar";
 import Footer from "@/components/general/Footer/Footer";
-import { BiHelpCircle, BiQuestionMark } from "react-icons/bi";
-import { ImInfo } from "react-icons/im";
+import { BiHelpCircle } from "react-icons/bi";
 import { MdDifference } from "react-icons/md";
-import { FcPrivacy } from "react-icons/fc";
-import { FaHandHolding } from "react-icons/fa6";
-import { DiGithub } from "react-icons/di";
 import { BsGithub } from "react-icons/bs";
 import { IoBusiness } from "react-icons/io5";
 import { CgPokemon } from "react-icons/cg";

@@ -21,6 +21,7 @@ type Quiz = {
   categories: string[];
   code: string;
   createdBy: string;
+  createdByEmail?: string;
   questions?: Array<{
     question: string;
     type: "text" | "image";
@@ -39,14 +40,31 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
   const isMobile = useBreakpointValue({ base: true, lg: false });
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [quizzesLoading, setQuizzesLoading] = useState(true);
+
   useEffect(() => {
+    // Get current user from localStorage
+    const savedUser = localStorage.getItem("user");
+    const currentUser = savedUser ? JSON.parse(savedUser) : null;
+
     fetch("https://rayquiza-backend.onrender.com/api/quizzes")
       .then((res) => res.json())
       .then((data) => {
-        setQuizzes(data);
+        // Filter quizzes to only show those created by the current user
+        if (currentUser && currentUser.email) {
+          const userQuizzes = data.filter(
+            (quiz: Quiz) => quiz.createdByEmail === currentUser.email
+          );
+          setQuizzes(userQuizzes);
+        } else {
+          // If no user is logged in, show no quizzes
+          setQuizzes([]);
+        }
         setQuizzesLoading(false);
       })
-      .catch((err) => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        setQuizzesLoading(false);
+      });
   }, []);
   return (
     <>
@@ -60,23 +78,26 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
       )}
       {!quizzesLoading && quizzes.length === 0 && (
         <Center>
-          <Heading size="md">No quizzes available</Heading>
+          <Heading size="md">You haven't created any quizzes yet</Heading>
         </Center>
       )}
       <SimpleGrid columns={isMobile ? 1 : 4}>
         {quizzes.map((quiz) => {
           // Safety check and calculate total duration from questions
           const questions = Array.isArray(quiz.questions) ? quiz.questions : [];
-          const totalDuration = questions.reduce((total, question) => total + (question.timeLimit || 30), 0);
+          const totalDuration = questions.reduce(
+            (total, question) => total + (question.timeLimit || 30),
+            0
+          );
           const durationText = `${totalDuration}s (${questions.length} questions)`;
-          
+
           // Ensure categories is always an array and code exists
           const safeQuiz = {
             ...quiz,
             categories: Array.isArray(quiz.categories) ? quiz.categories : [],
-            code: quiz.code || "NO_CODE"
+            code: quiz.code || "NO_CODE",
           };
-          
+
           return (
             <QuizCard
               key={quiz._id}

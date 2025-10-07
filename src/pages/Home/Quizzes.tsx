@@ -4,6 +4,8 @@ import {
   Heading,
   SimpleGrid,
   Spinner,
+  Text,
+  VStack,
   useBreakpointValue,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
@@ -42,18 +44,50 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
   const [quizzesLoading, setQuizzesLoading] = useState(true);
   const navigate = useNavigate();
   useEffect(() => {
-    fetch("https://rayquiza-backend.onrender.com/api/quizzes")
-      .then((res) => res.json())
-      .then((data) => {
-        setQuizzes(data);
-        setQuizzesLoading(false);
-      })
-      .catch((err) => console.error(err));
+    console.log("🔍 Fetching quizzes from API...");
+    
+    // Try remote server first, then local server as fallback
+    const tryFetch = async () => {
+      const endpoints = [
+        "https://rayquiza-backend.onrender.com/api/quizzes",
+        "http://localhost:5000/api/quizzes" // Local fallback
+      ];
+      
+      for (const endpoint of endpoints) {
+        try {
+          console.log(`📡 Trying endpoint: ${endpoint}`);
+          const res = await fetch(endpoint);
+          console.log("📡 API Response status:", res.status);
+          
+          if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          
+          const data = await res.json();
+          console.log("📊 Received quiz data:", data);
+          console.log("📈 Number of quizzes:", Array.isArray(data) ? data.length : 'Not an array');
+          
+          setQuizzes(Array.isArray(data) ? data : []);
+          setQuizzesLoading(false);
+          return; // Success, exit the loop
+          
+        } catch (err) {
+          console.error(`❌ Error with ${endpoint}:`, err);
+          continue; // Try next endpoint
+        }
+      }
+      
+      // If all endpoints fail
+      console.error("❌ All API endpoints failed");
+      setQuizzesLoading(false);
+    };
+    
+    tryFetch();
   }, []);
   return (
     <>
       <Heading margin="3" size="5xl">
-        {quizzesLoading ? "Loading your quizzes..." : "Your Quizzes"}
+        {quizzesLoading ? "Loading quizzes..." : `All Quizzes (${quizzes.length})`}
       </Heading>
       {quizzesLoading && (
         <Center>
@@ -62,7 +96,10 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
       )}
       {!quizzesLoading && quizzes.length === 0 && (
         <Center>
-          <Heading size="md">No quizzes available</Heading>
+          <VStack gap={4}>
+            <Heading size="md">No quizzes available</Heading>
+            <Text color="fg.muted">Check the browser console for API response details</Text>
+          </VStack>
         </Center>
       )}
       <SimpleGrid columns={isMobile ? 1 : 4}>

@@ -52,6 +52,136 @@ app.post("/api/auth/google", async (req, res) => {
     res.status(500).json({ error: "Google login failed" });
   }
 });
+
+// ✅ Sign Up with Email/Password Route
+app.post("/api/auth/signup", async (req, res) => {
+  try {
+    const { email, password, name } = req.body;
+
+    // Validate input
+    if (!email || !password || !name) {
+      return res.status(400).json({ error: "Email, password, and name are required" });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: "Invalid email format" });
+    }
+
+    // Validate password strength (minimum 6 characters)
+    if (password.length < 6) {
+      return res.status(400).json({ error: "Password must be at least 6 characters long" });
+    }
+
+    const db = await getDb();
+
+    // Check if user already exists
+    const existingUser = await db.collection("Users").findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      return res.status(409).json({ error: "User with this email already exists" });
+    }
+
+    // Hash password using crypto (built-in Node.js module)
+    const crypto = await import('crypto');
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+
+    // Create new user
+    const newUser = {
+      email: email.toLowerCase(),
+      name,
+      passwordHash: hash,
+      passwordSalt: salt,
+      authProvider: "email",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    const result = await db.collection("Users").insertOne(newUser);
+    const user = await db.collection("Users").findOne({ _id: result.insertedId });
+
+    // Remove sensitive data before sending response
+    delete user.passwordHash;
+    delete user.passwordSalt;
+
+    res.status(201).json({ 
+      message: "User created successfully", 
+      user: {
+        _id: user._id,
+        email: user.email,
+        name: user.name,
+        authProvider: user.authProvider,
+        createdAt: user.createdAt
+      }
+    });
+
+  } catch (err) {
+    console.error("Signup error:", err);
+    res.status(500).json({ error: "Sign up failed" });
+  }
+});
+
+// ✅ Login with Email/Password Route
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    const db = await getDb();
+
+    // Find user by email
+    const user = await db.collection("Users").findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    // Check if user signed up with email/password
+    if (user.authProvider !== "email") {
+      return res.status(401).json({ 
+        error: `This account was created using ${user.authProvider}. Please use ${user.authProvider} to login.` 
+      });
+    }
+
+    // Verify password
+    const crypto = await import('crypto');
+    const hash = crypto.pbkdf2Sync(password, user.passwordSalt, 1000, 64, 'sha512').toString('hex');
+    
+    if (hash !== user.passwordHash) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    // Update last login
+    await db.collection("Users").updateOne(
+      { _id: user._id },
+      { $set: { lastLogin: new Date() } }
+    );
+
+    // Remove sensitive data before sending response
+    delete user.passwordHash;
+    delete user.passwordSalt;
+
+    res.json({ 
+      message: "Login successful", 
+      user: {
+        _id: user._id,
+        email: user.email,
+        name: user.name,
+        picture: user.picture || null,
+        authProvider: user.authProvider
+      }
+    });
+
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ error: "Login failed" });
+  }
+});
+
 // ✅ Health Check Route
 app.get("/health", (req, res) => {
   res.status(200).send("OK");

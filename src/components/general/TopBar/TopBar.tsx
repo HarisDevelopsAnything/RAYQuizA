@@ -2,6 +2,7 @@ import { Button, ButtonGroup, Container, Spacer } from "@chakra-ui/react";
 import "./TopBar.css";
 import React, { useState } from "react";
 import ThemeSwitch from "@/components/ui/ThemeSwitch";
+import { useNavigate } from "react-router-dom";
 
 interface Props {
   onClickAbout: () => void;
@@ -13,6 +14,7 @@ const TopBar = ({ onClickAbout, darkMode }: Props) => {
   const setMode = () => {
     setDarkMode(!isDarkMode);
   };
+  const navigate = useNavigate();
   return (
     <Container
       fluid
@@ -38,11 +40,8 @@ const TopBar = ({ onClickAbout, darkMode }: Props) => {
           darkMode={isDarkMode}
           onClick={() => setMode()}
         ></ThemeSwitch>
-        <Button variant="solid" colorPalette={"teal"} borderRadius={"10px"}>
-          Login
-        </Button>
-        <Button variant="outline" borderRadius={"10px"}>
-          Sign up
+        <Button variant="solid" colorPalette={"teal"} borderRadius={"10px"} onClick={()=> navigate("/login")}>
+          Login/Signup
         </Button>
       </ButtonGroup>
     </Container>

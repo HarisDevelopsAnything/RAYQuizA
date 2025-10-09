@@ -8,6 +8,7 @@ import JoinCode from "./pages/JoinCode/JoinCode";
 import Profile from "./pages/Profile/Profile";
 import QuizPage from "./pages/QuizPage/QuizPage";
 import Support from "./pages/Support/Support";
+import { Toaster } from "./components/ui/toaster";
 
 const App = () => {
   return (
@@ -24,6 +25,7 @@ const App = () => {
           <Route path="/quiz/:quizId" element={<QuizPage />}></Route>
         </Routes>
       </BrowserRouter>
+      <Toaster />
     </>
   );
 };

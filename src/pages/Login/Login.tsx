@@ -100,6 +100,17 @@ const Login = () => {
       const data = await response.json();
 
       if (!response.ok) {
+        // Handle specific error cases
+        if (response.status === 409 && isSignUp) {
+          // Email already exists during signup
+          toaster.create({
+            title: "Email already exists",
+            description: "This email is already registered. Please login instead.",
+            type: "error",
+            duration: 5000,
+          });
+          return;
+        }
         throw new Error(data.error || `${isSignUp ? 'Signup' : 'Login'} failed`);
       }
 
@@ -109,8 +120,8 @@ const Login = () => {
       localStorage.setItem("userName", data.user.name);
 
       toaster.create({
-        title: isSignUp ? "Account created!" : "Welcome back!",
-        description: isSignUp ? "Welcome to RAYQuizA" : `Logged in as ${data.user.name}`,
+        title: isSignUp ? "Account created successfully!" : "Login successful!",
+        description: isSignUp ? "Welcome to RAYQuizA" : `Welcome back, ${data.user.name}`,
         type: "success",
         duration: 3000,
       });

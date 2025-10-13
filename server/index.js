@@ -1,7 +1,10 @@
 // server/index.ts
 import express from "express";
 import cors from "cors";
+import { createServer } from "http";
+import { Server } from "socket.io";
 import { getDb } from "./connect.cjs";
+import { setupRealtime } from "./socket-server.js";
 import { OAuth2Client } from "google-auth-library";
 
 const app = express();
@@ -11,6 +14,20 @@ app.use(express.json()); // Required for POST JSON parsing
 // Google OAuth client
 const googleClient = new OAuth2Client(process.env.VITE_GOOGLE_CLIENT_ID);
 const port = process.env.PORT || 5000;
+
+const httpServer = createServer(app);
+
+const io = new Server(httpServer, {
+  cors: {
+    origin: process.env.CORS_ORIGINS
+      ? process.env.CORS_ORIGINS.split(",").map((origin) => origin.trim())
+      : "*",
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
+
+setupRealtime(io);
 
 // ✅ Google Login Route
 app.post("/api/auth/google", async (req, res) => {
@@ -212,7 +229,7 @@ app.get("/api/quizzes", async (req, res) => {
 // ✅ Create Quiz Route
 app.post("/api/quizzes", async (req, res) => {
   try {
-    const { title, description, categories, code, createdBy, questions } = req.body;
+    const { title, description, categories, code, createdBy, createdByEmail, questions } = req.body;
     
     if (!title || !questions || questions.length === 0) {
       return res.status(400).json({ error: "Title and questions are required" });
@@ -243,6 +260,7 @@ app.post("/api/quizzes", async (req, res) => {
       categories: categories || [],
       code: uniqueCode,
       createdBy: createdBy || "Anonymous",
+      createdByEmail: createdByEmail || "",
       questions,
       createdAt: new Date(),
     };
@@ -361,4 +379,4 @@ app.delete("/api/user-preferences/:userId", async (req, res) => {
   }
 });
 
-app.listen(port, () => console.log("Server running on port 5000"));
+httpServer.listen(port, () => console.log(`Server running on port ${port}`));

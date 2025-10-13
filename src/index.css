@@ -5,3 +5,100 @@ body{
     font-family: Inter;
     font-weight: 400;
 }
+
+/* Font Size Preferences */
+.font-small {
+    font-size: 14px;
+}
+
+.font-medium {
+    font-size: 16px;
+}
+
+.font-large {
+    font-size: 18px;
+}
+
+/* High Contrast Mode */
+.high-contrast {
+    filter: contrast(1.5);
+}
+
+/* Reduced Motion */
+.reduced-motion,
+.reduced-motion * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+}
+
+/* Accent Color Variables - Teal (default) */
+:root,
+[data-accent-teal] {
+    --accent-50: #e6fffa;
+    --accent-100: #b2f5ea;
+    --accent-200: #81e6d9;
+    --accent-300: #4fd1c5;
+    --accent-400: #38b2ac;
+    --accent-500: #319795;
+    --accent-600: #2c7a7b;
+    --accent-700: #285e61;
+    --accent-800: #234e52;
+    --accent-900: #1d4044;
+}
+
+/* Accent Color Variables - Blue */
+[data-accent-blue] {
+    --accent-50: #ebf8ff;
+    --accent-100: #bee3f8;
+    --accent-200: #90cdf4;
+    --accent-300: #63b3ed;
+    --accent-400: #4299e1;
+    --accent-500: #3182ce;
+    --accent-600: #2b6cb0;
+    --accent-700: #2c5282;
+    --accent-800: #2a4365;
+    --accent-900: #1a365d;
+}
+
+/* Accent Color Variables - Green */
+[data-accent-green] {
+    --accent-50: #f0fff4;
+    --accent-100: #c6f6d5;
+    --accent-200: #9ae6b4;
+    --accent-300: #68d391;
+    --accent-400: #48bb78;
+    --accent-500: #38a169;
+    --accent-600: #2f855a;
+    --accent-700: #276749;
+    --accent-800: #22543d;
+    --accent-900: #1c4532;
+}
+
+/* Accent Color Variables - Purple */
+[data-accent-purple] {
+    --accent-50: #faf5ff;
+    --accent-100: #e9d8fd;
+    --accent-200: #d6bcfa;
+    --accent-300: #b794f4;
+    --accent-400: #9f7aea;
+    --accent-500: #805ad5;
+    --accent-600: #6b46c1;
+    --accent-700: #553c9a;
+    --accent-800: #44337a;
+    --accent-900: #322659;
+}
+
+/* Accent Color Variables - Orange */
+[data-accent-orange] {
+    --accent-50: #fffaf0;
+    --accent-100: #feebc8;
+    --accent-200: #fbd38d;
+    --accent-300: #f6ad55;
+    --accent-400: #ed8936;
+    --accent-500: #dd6b20;
+    --accent-600: #c05621;
+    --accent-700: #9c4221;
+    --accent-800: #7c2d12;
+    --accent-900: #652b19;
+}

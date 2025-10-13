@@ -3,6 +3,7 @@ import "./TopBar.css";
 import { useState } from "react";
 import ThemeSwitch from "@/components/ui/ThemeSwitch";
 import { useNavigate } from "react-router-dom";
+import { useAccentColor } from "@/contexts/UserPreferencesContext";
 
 interface Props {
   onClickAbout: () => void;
@@ -15,12 +16,13 @@ const TopBar = ({ onClickAbout }: Props) => {
     setDarkMode(!isDarkMode);
   };
   const navigate = useNavigate();
+  const accentColor = useAccentColor();
   return (
     <Container
       fluid
       margin="0px"
       width="100vw"
-      colorPalette="teal"
+      colorPalette={accentColor as any}
       backgroundColor="rgba(0,0,0,.5)"
       backdropFilter="blur(30px)"
       padding="10px"
@@ -40,7 +42,12 @@ const TopBar = ({ onClickAbout }: Props) => {
           darkMode={isDarkMode}
           onClick={() => setMode()}
         ></ThemeSwitch>
-        <Button variant="solid" colorPalette={"teal"} borderRadius={"10px"} onClick={()=> navigate("/login")}>
+        <Button
+          variant="solid"
+          colorPalette={accentColor as any}
+          borderRadius={"10px"}
+          onClick={() => navigate("/login")}
+        >
           Login/Signup
         </Button>
       </ButtonGroup>

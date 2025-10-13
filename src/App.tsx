@@ -7,6 +7,7 @@ import Login from "./pages/Login/Login";
 import JoinCode from "./pages/JoinCode/JoinCode";
 import Profile from "./pages/Profile/Profile";
 import QuizPage from "./pages/QuizPage/QuizPage";
+import LiveQuiz from "./pages/QuizPage/LiveQuiz";
 import Support from "./pages/Support/Support";
 import Settings from "./pages/Settings/Settings";
 import { Toaster } from "./components/ui/toaster";
@@ -25,6 +26,7 @@ const App = () => {
           <Route path="/support" element={<Support />}></Route>
           <Route path="/settings" element={<Settings />}></Route>
           <Route path="/quiz/:quizId" element={<QuizPage />}></Route>
+          <Route path="/quiz/live/:quizCode" element={<LiveQuiz />}></Route>
         </Routes>
       </BrowserRouter>
       <Toaster />

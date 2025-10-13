@@ -1,0 +1,5 @@
+- [x] Assess existing quiz architecture and data flow
+- [x] Define realtime lobby and gameplay requirements
+- [x] Implement backend real-time quiz synchronization (Socket.IO)
+- [x] Integrate frontend lobby, player sync, and live gameplay updates
+- [ ] Add tests or manual verification steps

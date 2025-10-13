@@ -10,6 +10,7 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAccentColor } from "@/contexts/UserPreferencesContext";
 
 interface Props {
   quizPopup: (value: boolean) => void;
@@ -43,62 +44,88 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [quizzesLoading, setQuizzesLoading] = useState(true);
   const navigate = useNavigate();
+  const accentColor = useAccentColor();
   useEffect(() => {
     console.log("🔍 Fetching quizzes from API...");
-    
+
+    // Get current user's email
+    let currentUserEmail = "";
+    try {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        currentUserEmail = user.email || "";
+      }
+    } catch (e) {
+      console.error("Error parsing user data:", e);
+    }
+
     // Try remote server first, then local server as fallback
     const tryFetch = async () => {
       const endpoints = [
         "https://rayquiza-backend.onrender.com/api/quizzes",
-        "http://localhost:5000/api/quizzes" // Local fallback
+        "http://localhost:5000/api/quizzes", // Local fallback
       ];
-      
+
       for (const endpoint of endpoints) {
         try {
           console.log(`📡 Trying endpoint: ${endpoint}`);
           const res = await fetch(endpoint);
           console.log("📡 API Response status:", res.status);
-          
+
           if (!res.ok) {
             throw new Error(`HTTP error! status: ${res.status}`);
           }
-          
+
           const data = await res.json();
           console.log("📊 Received quiz data:", data);
-          console.log("📈 Number of quizzes:", Array.isArray(data) ? data.length : 'Not an array');
-          
-          setQuizzes(Array.isArray(data) ? data : []);
+          console.log(
+            "📈 Number of quizzes:",
+            Array.isArray(data) ? data.length : "Not an array"
+          );
+
+          // Filter quizzes by current user's email
+          const filteredQuizzes = Array.isArray(data)
+            ? data.filter(
+                (quiz: Quiz & { createdByEmail?: string }) =>
+                  currentUserEmail && quiz.createdByEmail === currentUserEmail
+              )
+            : [];
+
+          console.log("📊 Filtered quizzes for user:", filteredQuizzes.length);
+          setQuizzes(filteredQuizzes);
           setQuizzesLoading(false);
           return; // Success, exit the loop
-          
         } catch (err) {
           console.error(`❌ Error with ${endpoint}:`, err);
           continue; // Try next endpoint
         }
       }
-      
+
       // If all endpoints fail
       console.error("❌ All API endpoints failed");
       setQuizzesLoading(false);
     };
-    
+
     tryFetch();
   }, []);
   return (
     <>
       <Heading margin="3" size="5xl">
-        {quizzesLoading ? "Loading quizzes..." : `All Quizzes (${quizzes.length})`}
+        {quizzesLoading
+          ? "Loading quizzes..."
+          : `My Quizzes (${quizzes.length})`}
       </Heading>
       {quizzesLoading && (
         <Center>
-          <Spinner color="teal" size="lg" />
+          <Spinner color={accentColor} size="lg" />
         </Center>
       )}
       {!quizzesLoading && quizzes.length === 0 && (
         <Center>
           <VStack gap={4}>
-            <Heading size="md">No quizzes available</Heading>
-            <Text color="fg.muted">Check the browser console for API response details</Text>
+            <Heading size="md">No quizzes created yet</Heading>
+            <Text color="fg.muted">Create your first quiz to get started!</Text>
           </VStack>
         </Center>
       )}
@@ -106,16 +133,19 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
         {quizzes.map((quiz) => {
           // Safety check and calculate total duration from questions
           const questions = Array.isArray(quiz.questions) ? quiz.questions : [];
-          const totalDuration = questions.reduce((total, question) => total + (question.timeLimit || 30), 0);
+          const totalDuration = questions.reduce(
+            (total, question) => total + (question.timeLimit || 30),
+            0
+          );
           const durationText = `${totalDuration}s (${questions.length} questions)`;
-          
+
           // Ensure categories is always an array and code exists
           const safeQuiz = {
             ...quiz,
             categories: Array.isArray(quiz.categories) ? quiz.categories : [],
-            code: quiz.code || "NO_CODE"
+            code: quiz.code || "NO_CODE",
           };
-          
+
           return (
             <QuizCard
               key={quiz._id}

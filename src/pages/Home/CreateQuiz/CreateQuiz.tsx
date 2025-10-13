@@ -10,11 +10,12 @@ import {
 import React from "react";
 import { CgAdd } from "react-icons/cg";
 import { MdDelete } from "react-icons/md";
+import { useAccentColor } from "@/contexts/UserPreferencesContext";
 
 // Function to generate a unique 6-digit alphanumeric code
 const generateQuizCode = (): string => {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let result = "";
   for (let i = 0; i < 6; i++) {
     result += characters.charAt(Math.floor(Math.random() * characters.length));
   }
@@ -34,6 +35,7 @@ interface QuestionType {
 }
 
 const CreateQuiz = () => {
+  const accentColor = useAccentColor();
   const [quizTitle, setQuizTitle] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [categories, setCategories] = React.useState<string[]>([]);
@@ -129,20 +131,38 @@ const CreateQuiz = () => {
     try {
       // Validate quiz data
       if (!quizTitle.trim()) {
-        alert('Please enter a quiz title');
+        alert("Please enter a quiz title");
         return;
       }
 
-      const invalidQuestions = questions.filter(q => 
-        !q.question.trim() || 
-        q.options.some(opt => !opt.trim()) ||
-        (q.answerType === 'single' && typeof q.correctOption !== 'number') ||
-        (q.answerType === 'multiple' && (!Array.isArray(q.correctOption) || q.correctOption.length === 0))
+      const invalidQuestions = questions.filter(
+        (q) =>
+          !q.question.trim() ||
+          q.options.some((opt) => !opt.trim()) ||
+          (q.answerType === "single" && typeof q.correctOption !== "number") ||
+          (q.answerType === "multiple" &&
+            (!Array.isArray(q.correctOption) || q.correctOption.length === 0))
       );
 
       if (invalidQuestions.length > 0) {
-        alert('Please fill in all questions, options, and select correct answers');
+        alert(
+          "Please fill in all questions, options, and select correct answers"
+        );
         return;
+      }
+
+      const storedUser = localStorage.getItem("user");
+      let userName = "Anonymous";
+      let userEmail = "";
+
+      if (storedUser) {
+        try {
+          const user = JSON.parse(storedUser);
+          userName = user.name || "Anonymous";
+          userEmail = user.email || "";
+        } catch (e) {
+          console.error("Error parsing user data:", e);
+        }
       }
 
       const quizData = {
@@ -150,48 +170,56 @@ const CreateQuiz = () => {
         description: description,
         categories: categories,
         code: generateQuizCode(),
-        createdBy: localStorage.getItem("user") ? (JSON.parse(localStorage.getItem("user") || "{}")).name || "Anonymous" : "Anonymous",
-        questions: questions
+        createdBy: userName,
+        createdByEmail: userEmail,
+        questions: questions,
       };
 
-      const response = await fetch('https://rayquiza-backend.onrender.com/api/quizzes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(quizData),
-      });
+      const response = await fetch(
+        "https://rayquiza-backend.onrender.com/api/quizzes",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(quizData),
+        }
+      );
 
       if (response.ok) {
         const result = await response.json();
-        console.log('Quiz created successfully:', result);
+        console.log("Quiz created successfully:", result);
         const createdQuiz = result.quiz;
-        alert(`Quiz created successfully!\nQuiz Code: ${createdQuiz.code}\n\nShare this code with participants to let them join your quiz.`);
-        
+        alert(
+          `Quiz created successfully!\nQuiz Code: ${createdQuiz.code}\n\nShare this code with participants to let them join your quiz.`
+        );
+
         // Reset form
-        setQuizTitle('');
-        setDescription('');
+        setQuizTitle("");
+        setDescription("");
         setCategories([]);
-        setNewCategory('');
-        setQuestions([{
-          question: "",
-          type: "text",
-          answerType: "single",
-          options: ["", "", "", ""],
-          correctOption: 0,
-          imageUrl: "",
-          points: 1,
-          negativePoints: 0,
-          timeLimit: 30,
-        }]);
+        setNewCategory("");
+        setQuestions([
+          {
+            question: "",
+            type: "text",
+            answerType: "single",
+            options: ["", "", "", ""],
+            correctOption: 0,
+            imageUrl: "",
+            points: 1,
+            negativePoints: 0,
+            timeLimit: 30,
+          },
+        ]);
       } else {
         const error = await response.json();
-        console.error('Failed to create quiz:', error);
-        alert('Failed to create quiz: ' + (error.error || 'Unknown error'));
+        console.error("Failed to create quiz:", error);
+        alert("Failed to create quiz: " + (error.error || "Unknown error"));
       }
     } catch (error) {
-      console.error('Error creating quiz:', error);
-      alert('Error creating quiz. Please try again.');
+      console.error("Error creating quiz:", error);
+      alert("Error creating quiz. Please try again.");
     }
   };
 
@@ -223,7 +251,10 @@ const CreateQuiz = () => {
     setQuestions(updatedQuestions);
   };
 
-  const handleNegativePointsChange = (index: number, negativePoints: number) => {
+  const handleNegativePointsChange = (
+    index: number,
+    negativePoints: number
+  ) => {
     const updatedQuestions = [...questions];
     updatedQuestions[index].negativePoints = negativePoints;
     setQuestions(updatedQuestions);
@@ -265,7 +296,7 @@ const CreateQuiz = () => {
             onChange={handleDescriptionChange}
             placeholder="Enter quiz description"
           />
-          
+
           <Text mb={2} mt={4} fontWeight="bold">
             Categories
           </Text>
@@ -276,7 +307,7 @@ const CreateQuiz = () => {
               placeholder="Add a category"
               flex={1}
             />
-            <Button colorPalette="blue" onClick={addCategory}>
+            <Button colorPalette={accentColor as any} onClick={addCategory}>
               <CgAdd />
             </Button>
           </Flex>
@@ -417,34 +448,44 @@ const CreateQuiz = () => {
 
             <Box mb={4}>
               <Heading size="md">Points for this question</Heading>
-              <Input 
-                type="number" 
-                placeholder="Points for this question" 
-                min="0" 
-                max="10" 
-                width="fit-content" 
+              <Input
+                type="number"
+                placeholder="Points for this question"
+                min="0"
+                max="10"
+                width="fit-content"
                 value={question.points}
-                onChange={(e) => handlePointsChange(qIndex, parseInt(e.target.value) || 1)}
+                onChange={(e) =>
+                  handlePointsChange(qIndex, parseInt(e.target.value) || 1)
+                }
               />
               <Heading size="md">Negative points for this question</Heading>
-              <Input 
-                type="number" 
-                placeholder="Negative points for this question" 
-                min="0" 
-                max="10" 
-                width="fit-content" 
+              <Input
+                type="number"
+                placeholder="Negative points for this question"
+                min="0"
+                max="10"
+                width="fit-content"
                 value={question.negativePoints}
-                onChange={(e) => handleNegativePointsChange(qIndex, parseInt(e.target.value) || 0)}
+                onChange={(e) =>
+                  handleNegativePointsChange(
+                    qIndex,
+                    parseInt(e.target.value) || 0
+                  )
+                }
               />
               <Heading size="md">Time limit for this question</Heading>
-              <Input 
-                type="number" 
-                placeholder="Time limit (seconds)" 
-                min="0" 
-                width="fit-content" 
+              <Input
+                type="number"
+                placeholder="Time limit (seconds)"
+                min="0"
+                width="fit-content"
                 value={question.timeLimit}
-                onChange={(e) => handleTimeLimitChange(qIndex, parseInt(e.target.value) || 30)}
-              /> seconds
+                onChange={(e) =>
+                  handleTimeLimitChange(qIndex, parseInt(e.target.value) || 30)
+                }
+              />{" "}
+              seconds
               <Text mb={2} fontWeight="bold">
                 Options
               </Text>
@@ -508,11 +549,15 @@ const CreateQuiz = () => {
           </Box>
         ))}
         <Flex justifyContent="space-between" mt={6}>
-          <Button colorPalette="blue" variant="outline" onClick={addQuestion}>
+          <Button
+            colorPalette={accentColor as any}
+            variant="outline"
+            onClick={addQuestion}
+          >
             <CgAdd style={{ marginRight: "8px" }} />
             Add Question
           </Button>
-          <Button colorPalette="green" onClick={handleSubmit}>
+          <Button colorPalette={accentColor as any} onClick={handleSubmit}>
             Create Quiz
           </Button>
         </Flex>

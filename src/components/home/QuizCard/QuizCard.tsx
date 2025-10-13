@@ -1,5 +1,6 @@
 import { useColorMode } from "@/components/ui/color-mode";
 import { Button, ButtonGroup, Card, Center } from "@chakra-ui/react";
+import { useAccentColor } from "@/contexts/UserPreferencesContext";
 
 interface Props {
   name: string;
@@ -17,6 +18,7 @@ const QuizCard = ({
   onClickViewDetails,
 }: Props) => {
   const { colorMode } = useColorMode();
+  const accentColor = useAccentColor();
   return (
     <Card.Root
       margin={"10px"}
@@ -40,10 +42,16 @@ const QuizCard = ({
         {duration}
       </Card.Body>
       <Card.Footer marginTop="10px" margin="0px" padding="0">
-        <ButtonGroup width={"100%"} marginTop="10px" margin="0px" gap="0" borderBottomRadius={"5px"}>
+        <ButtonGroup
+          width={"100%"}
+          marginTop="10px"
+          margin="0px"
+          gap="0"
+          borderBottomRadius={"5px"}
+        >
           <Button
             variant={"solid"}
-            colorPalette="teal"
+            colorPalette={accentColor as any}
             onClick={onClickTakeQuiz}
             margin="0px"
             width="50%"
@@ -54,7 +62,7 @@ const QuizCard = ({
           </Button>
           <Button
             variant={"subtle"}
-            colorPalette={"teal"}
+            colorPalette={accentColor as any}
             onClick={onClickViewDetails}
             margin="0px"
             width="50%"

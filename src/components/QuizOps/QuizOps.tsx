@@ -10,9 +10,26 @@ interface Props {
   onAnswerSelect?: (answerIndex: number) => void;
   showFeedback?: boolean;
   isCorrect?: boolean;
+  disableInteractions?: boolean;
+  timeRemaining?: number | null;
+  totalTime?: number | null;
+  correctAnswers?: number[];
 }
 
-const QuizOps = ({ question, type, options, image, selectedAnswers = [], onAnswerSelect, showFeedback = false, isCorrect = false }: Props) => {
+const QuizOps = ({
+  question,
+  type,
+  options,
+  image,
+  selectedAnswers = [],
+  onAnswerSelect,
+  showFeedback = false,
+  isCorrect = false,
+  disableInteractions = false,
+  timeRemaining = null,
+  totalTime = null,
+  correctAnswers,
+}: Props) => {
   const [showFirecrackers, setShowFirecrackers] = useState(false);
 
   useEffect(() => {
@@ -33,35 +50,39 @@ const QuizOps = ({ question, type, options, image, selectedAnswers = [], onAnswe
       <div
         key={index}
         className="firecracker"
-        style={{
-          '--x': `${x}px`,
-          '--y': `${y}px`,
-          left: `${Math.random() * 100}%`,
-          top: `${Math.random() * 100}%`,
-        } as React.CSSProperties}
+        style={
+          {
+            "--x": `${x}px`,
+            "--y": `${y}px`,
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+          } as React.CSSProperties
+        }
       />
     );
   };
 
   const handleOptionClick = (index: number) => {
-    if (onAnswerSelect && !showFeedback) {
+    if (onAnswerSelect && !showFeedback && !disableInteractions) {
       onAnswerSelect(index);
     }
   };
 
   const getButtonClass = (index: number) => {
     let baseClass = `btn${index + 1}`;
-    
+
     if (showFeedback) {
-      // Show correct/incorrect feedback
-      if (selectedAnswers.includes(index)) {
-        baseClass += isCorrect ? " correct" : " incorrect";
+      const isCorrectAnswer = correctAnswers?.includes(index);
+      if (isCorrectAnswer) {
+        baseClass += " correct";
+      } else if (selectedAnswers.includes(index)) {
+        baseClass += " incorrect";
       }
     } else if (selectedAnswers.includes(index)) {
       // Show selected state
       baseClass += " selected";
     }
-    
+
     return baseClass;
   };
 
@@ -70,14 +91,38 @@ const QuizOps = ({ question, type, options, image, selectedAnswers = [], onAnswe
       {/* Firecracker animation for correct answers */}
       {showFirecrackers && (
         <>
-          {isCorrect && <div className="firecracker-container">
-            {Array.from({ length: 20 }, (_, i) => createFirecracker(i))}
-          </div>}
+          {isCorrect && (
+            <div className="firecracker-container">
+              {Array.from({ length: 20 }, (_, i) => createFirecracker(i))}
+            </div>
+          )}
           {isCorrect && <div className="celebration-text">🎉 Correct! 🎉</div>}
-          {!isCorrect && <div className="celebration-text">Incorrect answer!</div>}
+          {!isCorrect && (
+            <div className="celebration-text">Incorrect answer!</div>
+          )}
         </>
       )}
-      
+
+      {typeof timeRemaining === "number" && timeRemaining >= 0 && (
+        <div className="timer">
+          <div className="timer-label">Time remaining</div>
+          <div className="timer-count">{timeRemaining}s</div>
+          {totalTime && totalTime > 0 && (
+            <div className="timer-bar">
+              <div
+                className="timer-bar-fill"
+                style={{
+                  width: `${Math.max(
+                    0,
+                    Math.min(100, (timeRemaining / totalTime) * 100)
+                  )}%`,
+                }}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
       <p
         className="question"
         style={{ height: "20%", margin: "0", padding: "1% 0 0 1%" }}
@@ -87,58 +132,74 @@ const QuizOps = ({ question, type, options, image, selectedAnswers = [], onAnswe
       <div className="quizops">
         <div className="imgdiv">
           {image && image.trim() !== "" ? (
-            <img 
-              src={image} 
-              alt="Question" 
+            <img
+              src={image}
+              alt="Question"
               onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
+                (e.target as HTMLImageElement).style.display = "none";
               }}
             />
           ) : null}
         </div>
         <div className="btns">
-          <button className={getButtonClass(0)} onClick={() => handleOptionClick(0)}>
+          <button
+            className={getButtonClass(0)}
+            onClick={() => handleOptionClick(0)}
+            disabled={showFeedback || disableInteractions}
+          >
             {type !== "single" && (
-              <input 
-                name="ckbx" 
-                type="checkbox" 
-                className="check" 
+              <input
+                name="ckbx"
+                type="checkbox"
+                className="check"
                 checked={selectedAnswers.includes(0)}
                 readOnly
               />
             )}
             {options[0]}
           </button>
-          <button className={getButtonClass(1)} onClick={() => handleOptionClick(1)}>
+          <button
+            className={getButtonClass(1)}
+            onClick={() => handleOptionClick(1)}
+            disabled={showFeedback || disableInteractions}
+          >
             {type !== "single" && (
-              <input 
-                name="ckbx" 
-                type="checkbox" 
-                className="check" 
+              <input
+                name="ckbx"
+                type="checkbox"
+                className="check"
                 checked={selectedAnswers.includes(1)}
                 readOnly
               />
             )}
             {options[1]}
           </button>
-          <button className={getButtonClass(2)} onClick={() => handleOptionClick(2)}>
+          <button
+            className={getButtonClass(2)}
+            onClick={() => handleOptionClick(2)}
+            disabled={showFeedback || disableInteractions}
+          >
             {type !== "single" && (
-              <input 
-                name="ckbx" 
-                type="checkbox" 
-                className="check" 
+              <input
+                name="ckbx"
+                type="checkbox"
+                className="check"
                 checked={selectedAnswers.includes(2)}
                 readOnly
               />
             )}
             {options[2]}
           </button>
-          <button className={getButtonClass(3)} onClick={() => handleOptionClick(3)}>
+          <button
+            className={getButtonClass(3)}
+            onClick={() => handleOptionClick(3)}
+            disabled={showFeedback || disableInteractions}
+          >
             {type !== "single" && (
-              <input 
-                name="ckbx" 
-                type="checkbox" 
-                className="check" 
+              <input
+                name="ckbx"
+                type="checkbox"
+                className="check"
                 checked={selectedAnswers.includes(3)}
                 readOnly
               />

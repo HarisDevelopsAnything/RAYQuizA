@@ -36,6 +36,7 @@ p{
     border-radius: 10px;
     color: white;
     border-color: aliceblue;
+    transition: transform 0.2s ease, opacity 0.2s ease;
 }
 .check{
     margin-right: 5px;
@@ -52,6 +53,12 @@ p{
 }
 .btn4{
     background-color: rgb(37, 99, 235);
+}
+
+.btns button:disabled{
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none;
 }
 
 /* Selected state styles */
@@ -144,4 +151,40 @@ p{
         transform: translateX(-50%) scale(1);
         opacity: 1;
     }
+}
+
+.timer {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: rgba(15, 23, 42, 0.55);
+    border-radius: 999px;
+    margin: 0 1.5rem 1rem;
+    border: 1px solid rgba(45, 212, 191, 0.35);
+}
+
+.timer-label {
+    font-size: 0.9rem;
+    color: #cbd5f5;
+}
+
+.timer-count {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #f8fafc;
+}
+
+.timer-bar {
+    flex: 1;
+    height: 8px;
+    background: rgba(226, 232, 240, 0.2);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.timer-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #22d3ee, #0ea5e9);
+    transition: width 0.5s linear;
 }

@@ -1,15 +1,15 @@
-import { 
+import {
   Box,
-  Button, 
-  Container, 
-  Heading, 
-  HStack, 
-  Input, 
-  Text, 
+  Button,
+  Container,
+  Heading,
+  HStack,
+  Input,
+  Text,
   VStack,
   Spinner,
   Link,
-  Separator
+  Separator,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -18,9 +18,11 @@ import "./Login.css";
 import LoginButton from "@/components/LoginButton";
 import { Field } from "../../components/ui/field";
 import { toaster } from "@/components/ui/toaster";
+import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { loadPreferences } = useUserPreferences();
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -94,16 +96,23 @@ const Login = () => {
     try {
       const endpoint = isSignUp ? "/api/auth/signup" : "/api/auth/login";
       const body = isSignUp
-        ? { name: formData.name, email: formData.email, password: formData.password }
+        ? {
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+          }
         : { email: formData.email, password: formData.password };
 
-      const response = await fetch(`https://rayquiza-backend.onrender.com${endpoint}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-      });
+      const response = await fetch(
+        `https://rayquiza-backend.onrender.com${endpoint}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+        }
+      );
 
       const data = await response.json();
 
@@ -113,13 +122,16 @@ const Login = () => {
           // Email already exists during signup
           toaster.create({
             title: "Email already exists",
-            description: "This email is already registered. Please login instead.",
+            description:
+              "This email is already registered. Please login instead.",
             type: "error",
             duration: 5000,
           });
           return;
         }
-        throw new Error(data.error || `${isSignUp ? 'Signup' : 'Login'} failed`);
+        throw new Error(
+          data.error || `${isSignUp ? "Signup" : "Login"} failed`
+        );
       }
 
       // Store user data
@@ -127,9 +139,14 @@ const Login = () => {
       localStorage.setItem("userId", data.user._id);
       localStorage.setItem("userName", data.user.name);
 
+      // Load preferences from server after successful login
+      await loadPreferences(data.user._id);
+
       toaster.create({
         title: isSignUp ? "Account created successfully!" : "Login successful!",
-        description: isSignUp ? "Welcome to RAYQuizA" : `Welcome back, ${data.user.name}`,
+        description: isSignUp
+          ? "Welcome to RAYQuizA"
+          : `Welcome back, ${data.user.name}`,
         type: "success",
         duration: 3000,
       });
@@ -139,10 +156,11 @@ const Login = () => {
         navigate("/home", { replace: true });
       }, 1000);
     } catch (error) {
-      console.error(`${isSignUp ? 'Signup' : 'Login'} error:`, error);
+      console.error(`${isSignUp ? "Signup" : "Login"} error:`, error);
       toaster.create({
-        title: `${isSignUp ? 'Signup' : 'Login'} failed`,
-        description: error instanceof Error ? error.message : "An error occurred",
+        title: `${isSignUp ? "Signup" : "Login"} failed`,
+        description:
+          error instanceof Error ? error.message : "An error occurred",
         type: "error",
         duration: 5000,
       });
@@ -205,10 +223,10 @@ const Login = () => {
       </Container>
 
       {/* Right Side - Sign In/Sign Up Form */}
-      <Container 
-        backgroundColor={"teal.500"} 
-        width="50%" 
-        height="100%" 
+      <Container
+        backgroundColor={"teal.500"}
+        width="50%"
+        height="100%"
         margin="0"
         display="flex"
         alignItems="center"
@@ -228,8 +246,8 @@ const Login = () => {
                 {isSignUp ? "Create Account" : "Sign In"}
               </Heading>
               <Text mt={2} color="gray.600" fontSize="sm">
-                {isSignUp 
-                  ? "Fill in your details to get started" 
+                {isSignUp
+                  ? "Fill in your details to get started"
                   : "Enter your credentials to continue"}
               </Text>
             </Box>
@@ -325,8 +343,10 @@ const Login = () => {
                 >
                   {loading ? (
                     <Spinner size="sm" />
+                  ) : isSignUp ? (
+                    "Sign Up"
                   ) : (
-                    isSignUp ? "Sign Up" : "Sign In"
+                    "Sign In"
                   )}
                 </Button>
               </VStack>
@@ -336,9 +356,11 @@ const Login = () => {
 
             <Box textAlign="center">
               <Text color="gray.600" fontSize="sm">
-                {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-                <Link 
-                  color="teal.600" 
+                {isSignUp
+                  ? "Already have an account?"
+                  : "Don't have an account?"}{" "}
+                <Link
+                  color="teal.600"
                   fontWeight="bold"
                   onClick={toggleMode}
                   cursor="pointer"

@@ -1,7 +1,7 @@
 "use client";
 import { IconButton } from "@chakra-ui/react";
-import { useColorMode } from "@/components/ui/color-mode";
 import { FaMoon, FaSun } from "react-icons/fa";
+import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 
 interface Props {
   darkMode: true | false;
@@ -9,7 +9,7 @@ interface Props {
 }
 
 const ThemeToggle = ({ darkMode, onClick }: Props) => {
-  const { toggleColorMode } = useColorMode();
+  const { toggleTheme } = useUserPreferences();
 
   return (
     <IconButton
@@ -17,7 +17,7 @@ const ThemeToggle = ({ darkMode, onClick }: Props) => {
       background="none"
       aria-label="Toggle theme"
       onClick={() => {
-        toggleColorMode();
+        toggleTheme();
         onClick();
       }}
       style={{

@@ -1,12 +1,16 @@
 import { Button, Container, Spacer, VStack } from "@chakra-ui/react";
 import React from "react";
 import { IoLogOut } from "react-icons/io5";
+import { useNavigate } from "react-router-dom";
 
 interface Props {
   setCurrentPage: (page: string) => void;
+  onLogout: () => void;
 }
 
-const Sidebar = ({ setCurrentPage }: Props) => {
+const Sidebar = ({ setCurrentPage, onLogout }: Props) => {
+  const navigate = useNavigate();
+
   return (
     <Container
       bgColor={"bg.subtle"}
@@ -61,11 +65,16 @@ const Sidebar = ({ setCurrentPage }: Props) => {
             )
           )}
         </VStack>
-        <Button colorScheme="teal" variant="outline" width="100%">
+        <Button 
+          colorScheme="teal" 
+          variant="outline" 
+          width="100%"
+          onClick={() => navigate("/settings")}
+        >
           Settings
         </Button>
         <Spacer></Spacer>
-        <Button colorPalette="red" variant="solid" width="100%" bottom="0px">
+        <Button colorPalette="red" variant="solid" width="100%" bottom="0px" onClick={onLogout}>
           Logout <IoLogOut />
         </Button>
       </VStack>

@@ -8,6 +8,7 @@ import JoinCode from "./pages/JoinCode/JoinCode";
 import Profile from "./pages/Profile/Profile";
 import QuizPage from "./pages/QuizPage/QuizPage";
 import Support from "./pages/Support/Support";
+import Settings from "./pages/Settings/Settings";
 import { Toaster } from "./components/ui/toaster";
 
 const App = () => {
@@ -22,6 +23,7 @@ const App = () => {
           <Route path="/join" element={<JoinCode />}></Route>
           <Route path="/profile" element={<Profile />}></Route>
           <Route path="/support" element={<Support />}></Route>
+          <Route path="/settings" element={<Settings />}></Route>
           <Route path="/quiz/:quizId" element={<QuizPage />}></Route>
         </Routes>
       </BrowserRouter>

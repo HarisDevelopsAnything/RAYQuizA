@@ -18,7 +18,7 @@ export default function LoginTest() {
     if (data.message === "Login successful") {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user)); // save user
-      navigate("/home");
+      navigate("/home", { replace: true });
     }
   };
   return (

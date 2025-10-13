@@ -275,4 +275,90 @@ app.get("/api/quizzes/code/:code", async (req, res) => {
   }
 });
 
+// ✅ User Preferences Routes
+// Get user preferences
+app.get("/api/user-preferences/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const db = await getDb();
+    const userPrefs = await db.collection("UserPrefs").findOne({ userId });
+    
+    if (!userPrefs) {
+      // Return default preferences if none exist
+      return res.json({ 
+        userId,
+        preferences: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+    }
+    
+    res.json(userPrefs);
+  } catch (err) {
+    console.error("Error fetching user preferences:", err);
+    res.status(500).json({ error: "Failed to fetch user preferences" });
+  }
+});
+
+// Create or update user preferences
+app.put("/api/user-preferences/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { preferences } = req.body;
+    
+    if (!preferences) {
+      return res.status(400).json({ error: "Preferences data is required" });
+    }
+    
+    const db = await getDb();
+    
+    const updateData = {
+      userId,
+      preferences,
+      updatedAt: new Date()
+    };
+    
+    // Use upsert to create if doesn't exist, update if it does
+    const result = await db.collection("UserPrefs").updateOne(
+      { userId },
+      { 
+        $set: updateData,
+        $setOnInsert: { createdAt: new Date() }
+      },
+      { upsert: true }
+    );
+    
+    const updatedPrefs = await db.collection("UserPrefs").findOne({ userId });
+    
+    res.json({ 
+      message: "User preferences updated successfully",
+      preferences: updatedPrefs,
+      modified: result.modifiedCount > 0,
+      created: result.upsertedCount > 0
+    });
+  } catch (err) {
+    console.error("Error updating user preferences:", err);
+    res.status(500).json({ error: "Failed to update user preferences" });
+  }
+});
+
+// Delete user preferences
+app.delete("/api/user-preferences/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const db = await getDb();
+    
+    const result = await db.collection("UserPrefs").deleteOne({ userId });
+    
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: "User preferences not found" });
+    }
+    
+    res.json({ message: "User preferences deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting user preferences:", err);
+    res.status(500).json({ error: "Failed to delete user preferences" });
+  }
+});
+
 app.listen(port, () => console.log("Server running on port 5000"));

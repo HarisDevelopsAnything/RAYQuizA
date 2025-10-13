@@ -11,7 +11,7 @@ import {
   Link,
   Separator
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Typewriter from "typewriter-effect";
 import "./Login.css";
@@ -30,6 +30,14 @@ const Login = () => {
     confirmPassword: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Check if user is already logged in and redirect to home
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      navigate("/home", { replace: true });
+    }
+  }, [navigate]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -126,9 +134,9 @@ const Login = () => {
         duration: 3000,
       });
 
-      // Redirect to home
+      // Redirect to home and replace history to prevent back navigation
       setTimeout(() => {
-        navigate("/home");
+        navigate("/home", { replace: true });
       }, 1000);
     } catch (error) {
       console.error(`${isSignUp ? 'Signup' : 'Login'} error:`, error);

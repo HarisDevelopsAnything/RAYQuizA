@@ -2,6 +2,7 @@ import { Provider } from "@/components/ui/provider";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
+import { UserPreferencesProvider } from "@/contexts/UserPreferencesContext";
 
 // If you have @react-oauth/google installed, uncomment the next line and wrap <App /> with <GoogleOAuthProvider>
 import { GoogleOAuthProvider } from "@react-oauth/google";
@@ -11,7 +12,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Provider>
       <GoogleOAuthProvider clientId={clientId}>
-        <App />
+        <UserPreferencesProvider>
+          <App />
+        </UserPreferencesProvider>
       </GoogleOAuthProvider>
     </Provider>
   </React.StrictMode>

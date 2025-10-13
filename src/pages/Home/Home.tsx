@@ -2,12 +2,14 @@ import NavBar from "@/components/general/NavBar/NavBar";
 import Sidebar from "@/pages/Home/Sidebar/Sidebar";
 import { Box, Flex, Show, useBreakpointValue } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Home.css";
 import QuizPopup from "@/components/general/QuizPopup/QuizPopup";
 import QuizDetails from "@/components/general/QuizDetails/QuizDetails";
 import Quizzes from "./Quizzes";
 import JoinCode from "../JoinCode/JoinCode";
 import CreateQuiz from "./CreateQuiz/CreateQuiz";
+import { toaster } from "@/components/ui/toaster";
 
 type Quiz = {
   _id: string;
@@ -31,6 +33,7 @@ type Quiz = {
 };
 
 const Home = () => {
+  const navigate = useNavigate();
   const isMobile = useBreakpointValue({ base: true, lg: false });
   const [isQuizPopupShowing, setShowingQuizPopup] = useState(false);
   const [isQuizDetailsShowing, setShowingQuizDetails] = useState(false);
@@ -59,13 +62,55 @@ const Home = () => {
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
       setUser(JSON.parse(savedUser));
+    } else {
+      // If no user is found, redirect to login
+      navigate("/login", { replace: true });
+      return;
     }
-  }, []);
+
+    // Prevent back navigation to login after successful authentication
+    const preventBackNavigation = () => {
+      window.history.pushState(null, "", window.location.href);
+    };
+
+    // Add state to history to prevent back navigation
+    preventBackNavigation();
+
+    // Listen for back button and prevent navigation to login
+    const handlePopState = () => {
+      preventBackNavigation();
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [navigate]);
+
+  const handleLogout = () => {
+    // Clear all stored user data
+    localStorage.removeItem("user");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("token");
+    
+    // Show success message
+    toaster.create({
+      title: "Logged out successfully",
+      description: "You have been logged out of your account",
+      type: "success",
+      duration: 3000,
+    });
+    
+    // Navigate to login page
+    navigate("/login", { replace: true });
+  };
 
   return (
     <Box>
       <Box position="fixed" top="0" left="0" right="0" zIndex={1000}>
-        <NavBar username={user?.name || ""} profilePic={user?.picture || ""} />
+        <NavBar username={user?.name || ""} profilePic={user?.picture || ""} onLogout={handleLogout} />
       </Box>
       <Flex>
         <Show when={!isMobile}>
@@ -79,7 +124,7 @@ const Home = () => {
             zIndex={999}
             pt="60px"
           >
-            <Sidebar setCurrentPage={setCurrentPage} />
+            <Sidebar setCurrentPage={setCurrentPage} onLogout={handleLogout} />
           </Box>
         </Show>
         <Box

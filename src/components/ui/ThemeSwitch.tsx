@@ -2,14 +2,12 @@
 import { IconButton } from "@chakra-ui/react";
 import { FaMoon, FaSun } from "react-icons/fa";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
+import { useColorMode } from "./color-mode";
 
-interface Props {
-  darkMode: true | false;
-  onClick: () => void;
-}
-
-const ThemeToggle = ({ darkMode, onClick }: Props) => {
+const ThemeToggle = () => {
   const { toggleTheme } = useUserPreferences();
+  const { colorMode } = useColorMode();
+  const isDarkMode = colorMode === "dark";
 
   return (
     <IconButton
@@ -17,8 +15,15 @@ const ThemeToggle = ({ darkMode, onClick }: Props) => {
       background="none"
       aria-label="Toggle theme"
       onClick={() => {
-        toggleTheme();
-        onClick();
+        console.log(
+          "ThemeSwitch clicked - current colorMode:",
+          isDarkMode ? "dark" : "light"
+        );
+        try {
+          toggleTheme();
+        } catch (e) {
+          console.error("toggleTheme error:", e);
+        }
       }}
       style={{
         position: "relative",
@@ -43,9 +48,9 @@ const ThemeToggle = ({ darkMode, onClick }: Props) => {
             left: "50%",
             transform: "translate(-50%, -50%)",
             transition: "all 1s cubic-bezier(0.4, 0, 0.2, 1)",
-            opacity: darkMode ? 0 : 1,
-            filter: darkMode ? "blur(8px)" : "blur(0px)",
-            transitionDelay: darkMode ? "0s" : "0.2s",
+            opacity: isDarkMode ? 0 : 1,
+            filter: isDarkMode ? "blur(8px)" : "blur(0px)",
+            transitionDelay: isDarkMode ? "0s" : "0.2s",
           }}
         >
           <FaSun
@@ -53,7 +58,7 @@ const ThemeToggle = ({ darkMode, onClick }: Props) => {
               color: "#ffa500",
               fontSize: "18px",
               transition: "all 1s cubic-bezier(0.4, 0, 0.2, 1)",
-              transform: darkMode
+              transform: isDarkMode
                 ? "scale(0.1) rotate(180deg)"
                 : "scale(1) rotate(0deg)",
             }}
@@ -67,9 +72,9 @@ const ThemeToggle = ({ darkMode, onClick }: Props) => {
             left: "50%",
             transform: "translate(-50%, -50%)",
             transition: "all 1s cubic-bezier(0.4, 0, 0.2, 1)",
-            opacity: darkMode ? 1 : 0,
-            filter: darkMode ? "blur(0px)" : "blur(8px)",
-            transitionDelay: darkMode ? "0.2s" : "0s",
+            opacity: isDarkMode ? 1 : 0,
+            filter: isDarkMode ? "blur(0px)" : "blur(8px)",
+            transitionDelay: isDarkMode ? "0.2s" : "0s",
           }}
         >
           <FaMoon
@@ -77,7 +82,7 @@ const ThemeToggle = ({ darkMode, onClick }: Props) => {
               color: "#e2e8f0",
               fontSize: "18px",
               transition: "all 1s cubic-bezier(0.4, 0, 0.2, 1)",
-              transform: darkMode
+              transform: isDarkMode
                 ? "scale(1) rotate(0deg)"
                 : "scale(0.1) rotate(-180deg)",
             }}

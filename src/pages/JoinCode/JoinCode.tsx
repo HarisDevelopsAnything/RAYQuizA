@@ -1,4 +1,4 @@
-import { Button, Heading, Input, HStack, Text } from "@chakra-ui/react";
+import { Button, Heading, Input } from "@chakra-ui/react";
 import React, { useState } from "react";
 import { BiLogIn } from "react-icons/bi";
 import { useNavigate } from "react-router-dom";
@@ -8,7 +8,6 @@ const JoinCode = () => {
   const [code, setCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [testResult, setTestResult] = useState<string>("");
-  const [joinMode, setJoinMode] = useState<"player" | "host">("player");
   const navigate = useNavigate();
   const accentColor = useAccentColor();
 
@@ -70,7 +69,7 @@ const JoinCode = () => {
         console.log("Found quiz:", quiz);
 
         navigate(`/quiz/live/${code.toUpperCase()}`, {
-          state: { isHost: joinMode === "host" },
+          state: { isHost: false },
         });
       } else if (response.status === 404) {
         alert("Quiz not found. Please check the code and try again.");
@@ -136,30 +135,6 @@ const JoinCode = () => {
         maxLength={6}
         style={{ textTransform: "uppercase" }}
       />
-      <div style={{ marginTop: "1.5rem", textAlign: "center" }}>
-        <Heading size="md" marginBottom="0.75rem">
-          How would you like to join?
-        </Heading>
-        <HStack gap="1rem" justifyContent="center">
-          <Button
-            variant={joinMode === "player" ? "solid" : "outline"}
-            colorPalette={joinMode === "player" ? (accentColor as any) : "gray"}
-            onClick={() => setJoinMode("player")}
-          >
-            Join as Player
-          </Button>
-          <Button
-            variant={joinMode === "host" ? "solid" : "outline"}
-            colorPalette={joinMode === "host" ? (accentColor as any) : "gray"}
-            onClick={() => setJoinMode("host")}
-          >
-            Host Quiz
-          </Button>
-        </HStack>
-        <Text fontSize="sm" color="gray.400" marginTop="0.5rem">
-          Hosts control the timer and question flow; players just answer.
-        </Text>
-      </div>
 
       <Button
         colorPalette={accentColor as any}

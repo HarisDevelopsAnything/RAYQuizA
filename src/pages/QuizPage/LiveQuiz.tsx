@@ -54,7 +54,20 @@ const getRealtimeUrl = () => {
   return "https://rayquiza-backend.onrender.com";
 };
 
-const createPlayerId = () => {
+const createPlayerId = (locationState?: {
+  isGuest?: boolean;
+  guestId?: string;
+}) => {
+  // Check if this is a guest join
+  if (locationState?.isGuest && locationState?.guestId) {
+    return locationState.guestId;
+  }
+
+  const guestId = localStorage.getItem("guestId");
+  if (guestId) {
+    return guestId;
+  }
+
   const stored = localStorage.getItem("userId");
   if (stored && stored.trim()) {
     return stored;
@@ -62,7 +75,20 @@ const createPlayerId = () => {
   return `guest-${Math.random().toString(36).slice(2, 8)}`;
 };
 
-const createPlayerName = () => {
+const createPlayerName = (locationState?: {
+  isGuest?: boolean;
+  guestName?: string;
+}) => {
+  // Check if this is a guest join
+  if (locationState?.isGuest && locationState?.guestName) {
+    return locationState.guestName;
+  }
+
+  const guestName = localStorage.getItem("guestName");
+  if (guestName) {
+    return guestName;
+  }
+
   const storedUser = localStorage.getItem("user");
   if (storedUser) {
     try {
@@ -85,14 +111,21 @@ const LiveQuiz = () => {
   const navigate = useNavigate();
   const { quizCode: rawQuizCode } = useParams<{ quizCode: string }>();
   const location = useLocation();
-  const locationState = location.state as { isHost?: boolean } | undefined;
+  const locationState = location.state as
+    | {
+        isHost?: boolean;
+        isGuest?: boolean;
+        guestId?: string;
+        guestName?: string;
+      }
+    | undefined;
   const requestedHost = Boolean(locationState?.isHost);
 
   const quizCode = (rawQuizCode || "").toUpperCase();
 
   const socketRef = useRef<Socket | null>(null);
-  const playerIdRef = useRef<string>(createPlayerId());
-  const playerNameRef = useRef<string>(createPlayerName());
+  const playerIdRef = useRef<string>(createPlayerId(locationState));
+  const playerNameRef = useRef<string>(createPlayerName(locationState));
 
   const [quizMeta, setQuizMeta] = useState<QuizMeta | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);

@@ -58,7 +58,7 @@ const QuizCard = ({
             borderRadius="0"
             borderBottomLeftRadius={"10px"}
           >
-            Take quiz
+            Host Quiz
           </Button>
           <Button
             variant={"subtle"}

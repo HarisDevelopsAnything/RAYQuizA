@@ -109,7 +109,7 @@ export const UserPreferencesProvider: React.FC<
   const [preferences, setPreferences] =
     useState<UserPreferences>(defaultPreferences);
   const [loading, setLoading] = useState(false);
-  const { setTheme } = useTheme();
+  const { setTheme, resolvedTheme, theme } = useTheme();
 
   const updatePreference = (
     section: keyof UserPreferences,
@@ -303,19 +303,18 @@ export const UserPreferencesProvider: React.FC<
     setPreferences((prev) => {
       const currentTheme = prev.appearance.defaultTheme;
       let newTheme: "light" | "dark" | "system";
-      
+
       // If system or light, go to dark; if dark, go to light
       if (currentTheme === "dark") {
         newTheme = "light";
       } else {
         newTheme = "dark";
       }
-      
+
       console.log("Theme toggled from", currentTheme, "to", newTheme);
-      
-      // Update the theme immediately
-      setTheme(newTheme);
-      
+
+      // Don't call setTheme here - let the useEffect handle it to avoid double-toggling
+
       // Return updated preferences
       return {
         ...prev,
@@ -348,14 +347,32 @@ export const UserPreferencesProvider: React.FC<
   // Only sync theme when defaultTheme is explicitly set (not on every preference change)
   useEffect(() => {
     console.log("Applying theme:", preferences.appearance.defaultTheme);
-    // Only apply if user has set a specific theme preference
-    // Don't override manual toggles by checking if we're in system mode
-    if (preferences.appearance.defaultTheme === "system") {
-      setTheme("system");
-    } else if (preferences.appearance.defaultTheme === "light" || preferences.appearance.defaultTheme === "dark") {
-      setTheme(preferences.appearance.defaultTheme);
+    const desired = preferences.appearance.defaultTheme;
+    console.log(
+      "[ThemeEffect] resolvedTheme:",
+      resolvedTheme,
+      "theme:",
+      theme,
+      "desired:",
+      desired
+    );
+    // Apply only if different to avoid feedback loops
+    if (desired === "system") {
+      if (theme !== "system") {
+        console.log("[ThemeEffect] setting theme to system");
+        setTheme("system");
+      } else {
+        console.log("[ThemeEffect] theme already system, skipping");
+      }
+    } else if (desired === "light" || desired === "dark") {
+      if (resolvedTheme !== desired) {
+        console.log("[ThemeEffect] setting theme to", desired);
+        setTheme(desired);
+      } else {
+        console.log("[ThemeEffect] resolvedTheme matches desired, skipping");
+      }
     }
-  }, [preferences.appearance.defaultTheme, setTheme]);
+  }, [preferences.appearance.defaultTheme, setTheme, resolvedTheme, theme]);
 
   // Apply accent color preference
   useEffect(() => {
@@ -406,6 +423,72 @@ export const UserPreferencesProvider: React.FC<
     preferences.quizPreferences.highContrastMode,
     preferences.quizPreferences.reducedAnimations,
   ]);
+
+  // Diagnostic: observe theme-related DOM attribute changes to help debug flicker
+  useEffect(() => {
+    try {
+      const root = document.documentElement;
+      console.log(
+        "[ThemeObserver] initial root.class:",
+        root.className,
+        "html attributes:",
+        {
+          theme: root.getAttribute("data-theme"),
+          accented:
+            root.getAttribute("data-accent-teal") ||
+            root.getAttribute("data-accent-blue") ||
+            root.getAttribute("data-accent-green") ||
+            root.getAttribute("data-accent-purple") ||
+            root.getAttribute("data-accent-orange"),
+        }
+      );
+
+      const observer = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+          if (m.type === "attributes") {
+            const name = m.attributeName;
+            if (!name) continue;
+            const value =
+              root.getAttribute(name) ||
+              (name === "class" ? root.className : null);
+            console.log(`[ThemeObserver] attribute changed: ${name} ->`, value);
+          }
+        }
+      });
+
+      observer.observe(root, {
+        attributes: true,
+        attributeFilter: [
+          "class",
+          "data-theme",
+          "data-accent-teal",
+          "data-accent-blue",
+          "data-accent-green",
+          "data-accent-purple",
+          "data-accent-orange",
+        ],
+      });
+
+      const onStorage = (e: StorageEvent) => {
+        if (!e) return;
+        if (
+          e.key &&
+          (e.key.startsWith("userPreferences_") || e.key === "theme")
+        ) {
+          console.log("[ThemeObserver] storage event:", e.key, e.newValue);
+        }
+      };
+
+      window.addEventListener("storage", onStorage);
+
+      return () => {
+        observer.disconnect();
+        window.removeEventListener("storage", onStorage);
+      };
+    } catch (err) {
+      console.warn("[ThemeObserver] failed to attach observer:", err);
+    }
+  }, []);
 
   const value: UserPreferencesContextType = {
     preferences,

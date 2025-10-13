@@ -53,7 +53,7 @@ const Landing = () => {
           size="2xl"
           transition="0.3s ease all"
           _hover={{ transform: "scale(1.1)" }}
-          onClick={() => navigate("/home")}
+          onClick={() => navigate("/guest-join")}
         >
           Let's get quizzing! <FaArrowRight />
         </Button>

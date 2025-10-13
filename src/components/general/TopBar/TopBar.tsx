@@ -1,20 +1,14 @@
 import { Button, ButtonGroup, Container, Spacer } from "@chakra-ui/react";
 import "./TopBar.css";
-import { useState } from "react";
 import ThemeSwitch from "@/components/ui/ThemeSwitch";
 import { useNavigate } from "react-router-dom";
 import { useAccentColor } from "@/contexts/UserPreferencesContext";
 
 interface Props {
   onClickAbout: () => void;
-  darkMode?: "dark" | "light";
 }
 
 const TopBar = ({ onClickAbout }: Props) => {
-  const [isDarkMode, setDarkMode] = useState(true);
-  const setMode = () => {
-    setDarkMode(!isDarkMode);
-  };
   const navigate = useNavigate();
   const accentColor = useAccentColor();
   return (
@@ -38,10 +32,7 @@ const TopBar = ({ onClickAbout }: Props) => {
       </Button>
       <Spacer />
       <ButtonGroup>
-        <ThemeSwitch
-          darkMode={isDarkMode}
-          onClick={() => setMode()}
-        ></ThemeSwitch>
+        <ThemeSwitch></ThemeSwitch>
         <Button
           variant="solid"
           colorPalette={accentColor as any}

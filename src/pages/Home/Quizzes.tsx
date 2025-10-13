@@ -153,9 +153,11 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
               desc={quiz.description || "No description available"}
               duration={durationText}
               onClickTakeQuiz={() => {
-                // Navigate to quiz page using the quiz code
+                // Navigate to live quiz as host
                 if (safeQuiz.code && safeQuiz.code !== "NO_CODE") {
-                  navigate(`/quiz/${safeQuiz.code}`);
+                  navigate(`/quiz/live/${safeQuiz.code}`, {
+                    state: { isHost: true },
+                  });
                 } else {
                   // Fallback: set selected quiz and show popup if no code
                   setSelectedQuiz(safeQuiz);

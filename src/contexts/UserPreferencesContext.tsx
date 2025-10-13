@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { useTheme } from 'next-themes';
 
 export interface UserPreferences {
   // Account & Profile Settings
@@ -98,6 +99,7 @@ interface UserPreferencesProviderProps {
 export const UserPreferencesProvider: React.FC<UserPreferencesProviderProps> = ({ children }) => {
   const [preferences, setPreferences] = useState<UserPreferences>(defaultPreferences);
   const [loading, setLoading] = useState(false);
+  const { setTheme } = useTheme();
 
   const updatePreference = (section: keyof UserPreferences, key: string, value: any) => {
     setPreferences(prev => ({
@@ -142,8 +144,9 @@ export const UserPreferencesProvider: React.FC<UserPreferencesProviderProps> = (
       const localPrefs = localStorage.getItem(`userPreferences_${userId}`);
       if (localPrefs) {
         const parsedPrefs = JSON.parse(localPrefs);
+        console.log("Loading from localStorage:", parsedPrefs);
         setPreferences(prev => ({ ...prev, ...parsedPrefs }));
-        console.log("Preferences loaded from localStorage");
+        console.log("Preferences loaded from localStorage and merged");
       } else {
         console.log("No preferences found in localStorage, using defaults");
       }
@@ -217,17 +220,21 @@ export const UserPreferencesProvider: React.FC<UserPreferencesProviderProps> = (
     if (user) {
       const userData = JSON.parse(user);
       if (userData._id) {
+        console.log("User found, loading preferences for:", userData._id);
         loadPreferences(userData._id);
       }
     }
   }, []);
 
-  // Apply theme preference on load
+  // Apply theme preference on load and when preferences change
   useEffect(() => {
-    if (preferences.appearance.defaultTheme !== "system") {
-      document.documentElement.setAttribute('data-theme', preferences.appearance.defaultTheme);
+    console.log("Applying theme:", preferences.appearance.defaultTheme);
+    if (preferences.appearance.defaultTheme === "system") {
+      setTheme("system");
+    } else {
+      setTheme(preferences.appearance.defaultTheme);
     }
-  }, [preferences.appearance.defaultTheme]);
+  }, [preferences.appearance.defaultTheme, setTheme]);
 
   // Apply font size preference
   useEffect(() => {

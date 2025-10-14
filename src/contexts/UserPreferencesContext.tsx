@@ -16,6 +16,7 @@ export interface UserPreferences {
     autoSwitchTheme: boolean;
     accentColor: string;
     fontSize: "small" | "medium" | "large";
+    showCursorFollower: boolean;
   };
 
   // Authentication & Security
@@ -57,6 +58,7 @@ export const defaultPreferences: UserPreferences = {
     autoSwitchTheme: false,
     accentColor: "teal",
     fontSize: "medium",
+    showCursorFollower: false,
   },
   security: {
     stayLoggedIn: true,

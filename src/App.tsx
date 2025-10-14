@@ -12,10 +12,12 @@ import LiveQuiz from "./pages/QuizPage/LiveQuiz";
 import Support from "./pages/Support/Support";
 import Settings from "./pages/Settings/Settings";
 import { Toaster } from "./components/ui/toaster";
+import CursorFollower from "./components/general/CursorFollower/CursorFollower";
 
 const App = () => {
   return (
     <>
+      <CursorFollower />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Landing />}></Route>

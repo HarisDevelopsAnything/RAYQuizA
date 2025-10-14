@@ -397,6 +397,36 @@ const Settings = () => {
                           </NativeSelectField>
                         </NativeSelectRoot>
                       </Field>
+
+                      <HStack justify="space-between">
+                        <VStack align="start" gap={1}>
+                          <Text
+                            fontWeight="medium"
+                            color="gray.900"
+                            _dark={{ color: "white" }}
+                          >
+                            Cursor Follower
+                          </Text>
+                          <Text
+                            fontSize="sm"
+                            color="gray.600"
+                            _dark={{ color: "gray.300" }}
+                          >
+                            Show color-inverting cursor effect (desktop only)
+                          </Text>
+                        </VStack>
+                        <input
+                          type="checkbox"
+                          checked={preferences.appearance.showCursorFollower}
+                          onChange={(e) =>
+                            updatePreference(
+                              "appearance",
+                              "showCursorFollower",
+                              e.target.checked
+                            )
+                          }
+                        />
+                      </HStack>
                     </VStack>
                   </Card.Body>
                 </Card.Root>

@@ -66,13 +66,21 @@ router.post('/generate-quiz', async (req, res) => {
     }
 
     // Call OpenRouter API (supports multiple models)
+    console.log('Calling OpenRouter API with model:', selectedModel);
     const completion = await openai.chat.completions.create(requestConfig);
+
+    console.log('===== FULL API RESPONSE =====');
+    console.log(JSON.stringify(completion, null, 2));
+    console.log('============================');
 
     const generatedContent = completion.choices[0].message.content;
     
     // Log the raw response for debugging
-    console.log('AI Response received, length:', generatedContent?.length || 0);
-    console.log('First 200 chars:', generatedContent?.substring(0, 200));
+    console.log('===== AI GENERATED CONTENT =====');
+    console.log('Length:', generatedContent?.length || 0);
+    console.log('Full content:');
+    console.log(generatedContent);
+    console.log('================================');
     
     if (!generatedContent || generatedContent.trim().length === 0) {
       throw new Error('AI model returned empty response. Try a different model or check your API key.');
@@ -80,14 +88,22 @@ router.post('/generate-quiz', async (req, res) => {
     
     // Clean up the response - remove markdown code blocks if present
     let cleanedContent = generatedContent.trim();
+    console.log('Cleaned content before JSON parse:');
+    console.log(cleanedContent);
+    
     if (cleanedContent.startsWith('```json')) {
       cleanedContent = cleanedContent.replace(/```json\n?/g, '').replace(/```\n?$/g, '');
+      console.log('Removed ```json blocks');
     } else if (cleanedContent.startsWith('```')) {
       cleanedContent = cleanedContent.replace(/```\n?/g, '');
+      console.log('Removed ``` blocks');
     }
     
+    console.log('Final content to parse:');
+    console.log(cleanedContent);
     console.log('Attempting to parse JSON...');
     const quizData = JSON.parse(cleanedContent);
+    console.log('✅ JSON parsed successfully!');
 
     // Validate and format the response
     const formattedQuiz = formatQuizResponse(quizData, title);

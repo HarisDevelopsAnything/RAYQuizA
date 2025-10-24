@@ -6,6 +6,7 @@ import { Server } from "socket.io";
 import { getDb } from "./connect.cjs";
 import { setupRealtime } from "./socket-server.js";
 import { OAuth2Client } from "google-auth-library";
+import aiQuizRoutes from "./ai-quiz-routes.js";
 
 const app = express();
 app.use(cors());
@@ -28,6 +29,9 @@ const io = new Server(httpServer, {
 });
 
 setupRealtime(io);
+
+// Mount AI quiz generation routes
+app.use('/api', aiQuizRoutes);
 
 // ✅ Google Login Route
 app.post("/api/auth/google", async (req, res) => {

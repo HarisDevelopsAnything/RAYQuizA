@@ -11,6 +11,8 @@ import React from "react";
 import { CgAdd } from "react-icons/cg";
 import { MdDelete } from "react-icons/md";
 import { useAccentColor } from "@/contexts/UserPreferencesContext";
+import AIQuizGenerator, { type AIGeneratedQuizData } from "@/components/AIQuizGenerator/AIQuizGenerator";
+import { FaWandMagicSparkles } from "react-icons/fa6";
 
 // Function to generate a unique 6-digit alphanumeric code
 const generateQuizCode = (): string => {
@@ -40,6 +42,7 @@ const CreateQuiz = () => {
   const [description, setDescription] = React.useState("");
   const [categories, setCategories] = React.useState<string[]>([]);
   const [newCategory, setNewCategory] = React.useState("");
+  const [isAIModalOpen, setIsAIModalOpen] = React.useState(false);
   const [questions, setQuestions] = React.useState<QuestionType[]>([
     {
       question: "",
@@ -266,11 +269,32 @@ const CreateQuiz = () => {
     setQuestions(updatedQuestions);
   };
 
+  const handleAIGeneration = (generatedData: AIGeneratedQuizData) => {
+    // Populate the form with AI-generated data
+    setQuizTitle(generatedData.title);
+    setDescription(generatedData.description);
+    setCategories(generatedData.categories);
+    setQuestions(generatedData.questions);
+  };
+
   return (
     <Box p={6}>
-      <Heading size="lg" mb={6}>
-        Create Quiz
-      </Heading>
+      <AIQuizGenerator
+        isOpen={isAIModalOpen}
+        onClose={() => setIsAIModalOpen(false)}
+        onGenerate={handleAIGeneration}
+      />
+      
+      <Flex justifyContent="space-between" alignItems="center" mb={6}>
+        <Heading size="lg">Create Quiz</Heading>
+        <Button
+          colorPalette={accentColor as any}
+          onClick={() => setIsAIModalOpen(true)}
+        >
+          <FaWandMagicSparkles style={{ marginRight: '8px' }} />
+          Generate with AI
+        </Button>
+      </Flex>
       <Box
         maxW="800px"
         mx="auto"

@@ -76,7 +76,11 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
     setIsGenerating(true);
 
     try {
-      const response = await fetch("/api/generate-quiz", {
+      const apiUrl = import.meta.env.DEV 
+        ? "/api/generate-quiz" 
+        : "https://rayquiza-backend.onrender.com/api/generate-quiz";
+      
+      const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

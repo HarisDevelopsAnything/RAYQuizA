@@ -70,6 +70,14 @@ router.post('/generate-quiz', async (req, res) => {
 
     const generatedContent = completion.choices[0].message.content;
     
+    // Log the raw response for debugging
+    console.log('AI Response received, length:', generatedContent?.length || 0);
+    console.log('First 200 chars:', generatedContent?.substring(0, 200));
+    
+    if (!generatedContent || generatedContent.trim().length === 0) {
+      throw new Error('AI model returned empty response. Try a different model or check your API key.');
+    }
+    
     // Clean up the response - remove markdown code blocks if present
     let cleanedContent = generatedContent.trim();
     if (cleanedContent.startsWith('```json')) {
@@ -78,6 +86,7 @@ router.post('/generate-quiz', async (req, res) => {
       cleanedContent = cleanedContent.replace(/```\n?/g, '');
     }
     
+    console.log('Attempting to parse JSON...');
     const quizData = JSON.parse(cleanedContent);
 
     // Validate and format the response
@@ -86,13 +95,24 @@ router.post('/generate-quiz', async (req, res) => {
     res.json(formattedQuiz);
   } catch (error) {
     console.error('Error generating quiz:', error);
+    console.error('Error stack:', error.stack);
     
     // Provide more detailed error information
     let errorMessage = 'Failed to generate quiz';
     let errorDetails = error.message;
     
     if (error.response) {
-      errorDetails = error.response.data?.error?.message || error.response.data || error.message;
+      console.error('API Error Response:', error.response.data);
+      errorDetails = error.response.data?.error?.message || JSON.stringify(error.response.data) || error.message;
+    }
+    
+    // Check for common issues
+    if (error.message.includes('JSON')) {
+      errorDetails = `Model returned invalid JSON. Try using 'openai/gpt-4o-mini' instead. Error: ${error.message}`;
+    } else if (error.message.includes('API key')) {
+      errorDetails = 'Invalid API key. Check your OPENROUTER_API_KEY in environment variables.';
+    } else if (error.message.includes('model')) {
+      errorDetails = `Model issue: ${error.message}. Try 'openai/gpt-4o-mini' in your .env`;
     }
     
     res.status(500).json({

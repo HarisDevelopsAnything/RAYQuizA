@@ -105,6 +105,21 @@ router.post('/generate-quiz', async (req, res) => {
       console.log('Removed ``` blocks');
     }
     
+    // Extract JSON if there's extra text after it
+    // Some models add explanation after the JSON
+    try {
+      // Try to find the first { and last }
+      const firstBrace = cleanedContent.indexOf('{');
+      const lastBrace = cleanedContent.lastIndexOf('}');
+      
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        cleanedContent = cleanedContent.substring(firstBrace, lastBrace + 1);
+        console.log('Extracted JSON from position', firstBrace, 'to', lastBrace);
+      }
+    } catch (e) {
+      console.log('Could not extract JSON, using original content');
+    }
+    
     console.log('Final content to parse:');
     console.log(cleanedContent);
     console.log('Attempting to parse JSON...');

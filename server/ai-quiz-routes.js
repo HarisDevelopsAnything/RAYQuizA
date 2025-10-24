@@ -49,7 +49,7 @@ router.post('/generate-quiz', async (req, res) => {
       messages: [
         {
           role: 'system',
-          content: 'You are a helpful assistant that generates educational quiz questions in JSON format. Always respond with valid JSON only, no additional text or markdown.',
+          content: 'You are a helpful assistant that generates educational quiz questions in JSON format. Always respond with valid JSON only, no additional text or markdown. Do not use code blocks.',
         },
         {
           role: 'user',
@@ -60,9 +60,15 @@ router.post('/generate-quiz', async (req, res) => {
     };
 
     // Try to add JSON mode if the model supports it
-    // Most OpenAI and some other models support this
-    if (selectedModel.includes('openai/') || selectedModel.includes('gpt')) {
+    // Most OpenAI models support this, but free models might not
+    const modelsWithJsonSupport = ['openai/gpt-4', 'openai/gpt-3.5', 'gpt-4', 'gpt-3.5'];
+    const supportsJsonMode = modelsWithJsonSupport.some(m => selectedModel.includes(m));
+    
+    if (supportsJsonMode) {
       requestConfig.response_format = { type: 'json_object' };
+      console.log('Using JSON mode for this model');
+    } else {
+      console.log('Model does not support JSON mode, relying on prompt engineering');
     }
 
     // Call OpenRouter API (supports multiple models)
@@ -165,9 +171,12 @@ function buildQuizPrompt(params) {
 
   prompt += `
 
-CRITICAL: You MUST respond with ONLY valid JSON. No markdown, no code blocks, no explanation.
+CRITICAL INSTRUCTIONS:
+1. Respond with ONLY valid JSON - no markdown, no code blocks (no \`\`\`), no explanation text
+2. Start your response with { and end with }
+3. Do not wrap the JSON in any formatting
 
-Return a JSON object with the following EXACT structure:
+Return a JSON object with this EXACT structure:
 {
   "description": "A brief description of the quiz (2-3 sentences)",
   "categories": ["array", "of", "relevant", "categories"],
@@ -185,6 +194,7 @@ Return a JSON object with the following EXACT structure:
 
 IMPORTANT RULES:
 - Respond with ONLY the JSON object, nothing else
+- Do NOT use markdown code blocks (\`\`\`json or \`\`\`)
 - Each question MUST have exactly 4 options
 - correctOption is the index (0-3) of the correct answer
 - Make questions engaging and educational

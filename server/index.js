@@ -22,7 +22,7 @@ const io = new Server(httpServer, {
   cors: {
     origin: process.env.CORS_ORIGINS
       ? process.env.CORS_ORIGINS.split(",").map((origin) => origin.trim())
-      : "*",
+      : ["http://localhost:5173", "http://localhost:3000", "https://rayquiza-frontend.onrender.com"],
     methods: ["GET", "POST"],
     credentials: true,
   },

@@ -103,7 +103,6 @@ const Landing = () => {
           ></Interesting>
         </SimpleGrid>
       </Container>
-      <Footer />
     </>
   );
 };

@@ -11,7 +11,9 @@ import React from "react";
 import { CgAdd } from "react-icons/cg";
 import { MdDelete } from "react-icons/md";
 import { useAccentColor } from "@/contexts/UserPreferencesContext";
-import AIQuizGenerator, { type AIGeneratedQuizData } from "@/components/AIQuizGenerator/AIQuizGenerator";
+import AIQuizGenerator, {
+  type AIGeneratedQuizData,
+} from "@/components/AIQuizGenerator/AIQuizGenerator";
 import { FaWandMagicSparkles } from "react-icons/fa6";
 
 // Function to generate a unique 6-digit alphanumeric code
@@ -284,14 +286,14 @@ const CreateQuiz = () => {
         onClose={() => setIsAIModalOpen(false)}
         onGenerate={handleAIGeneration}
       />
-      
+
       <Flex justifyContent="space-between" alignItems="center" mb={6}>
         <Heading size="lg">Create Quiz</Heading>
         <Button
           colorPalette={accentColor as any}
           onClick={() => setIsAIModalOpen(true)}
         >
-          <FaWandMagicSparkles style={{ marginRight: '8px' }} />
+          <FaWandMagicSparkles style={{ marginRight: "8px" }} />
           Generate with AI
         </Button>
       </Flex>

@@ -3,11 +3,13 @@
 ## Installation
 
 1. **Install the OpenAI package:**
+
    ```bash
    npm install
    ```
 
 2. **Set up your OpenRouter API key:**
+
    - Get an API key from [OpenRouter](https://openrouter.ai/keys)
    - Add it to your `.env` file:
      ```env
@@ -16,13 +18,15 @@
      ```
 
 3. **Start your servers:**
-   
+
    **Terminal 1 (Backend):**
+
    ```bash
    node server/index.js
    ```
-   
+
    **Terminal 2 (Frontend):**
+
    ```bash
    npm run dev
    ```
@@ -52,12 +56,14 @@
 - ✅ **Easy switching** between models
 
 ### Popular Models:
+
 - `openai/gpt-4o-mini` - Fast & cheap (recommended)
 - `anthropic/claude-3.5-sonnet` - Best for creative content
 - `google/gemini-pro` - Good balance
 - `meta-llama/llama-3.1-70b-instruct` - Open source
 
 Change models in `.env`:
+
 ```env
 AI_MODEL=anthropic/claude-3.5-sonnet
 ```
@@ -65,6 +71,7 @@ AI_MODEL=anthropic/claude-3.5-sonnet
 ## That's it! 🎉
 
 The AI will generate complete quiz questions with:
+
 - Question text
 - 4 multiple-choice options
 - Correct answer marked

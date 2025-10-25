@@ -76,10 +76,10 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
     setIsGenerating(true);
 
     try {
-      const apiUrl = import.meta.env.DEV 
-        ? "/api/generate-quiz" 
+      const apiUrl = import.meta.env.DEV
+        ? "/api/generate-quiz"
         : "https://rayquiza-backend.onrender.com/api/generate-quiz";
-      
+
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
@@ -90,13 +90,15 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.details || errorData.error || "Failed to generate quiz");
+        throw new Error(
+          errorData.details || errorData.error || "Failed to generate quiz"
+        );
       }
 
       const generatedQuiz: AIGeneratedQuizData = await response.json();
       onGenerate(generatedQuiz);
       onClose();
-      
+
       // Reset form
       setFormData({
         title: "",
@@ -108,8 +110,11 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
       });
     } catch (error) {
       console.error("Error generating quiz:", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-      alert(`Failed to generate quiz:\n\n${errorMessage}\n\nPlease check:\n1. Your API key is valid\n2. Your OpenRouter account has credits\n3. The selected model is available\n4. Server console for detailed logs`);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      alert(
+        `Failed to generate quiz:\n\n${errorMessage}\n\nPlease check:\n1. Your API key is valid\n2. Your OpenRouter account has credits\n3. The selected model is available\n4. Server console for detailed logs`
+      );
     } finally {
       setIsGenerating(false);
     }
@@ -145,7 +150,9 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
             zIndex={1001}
           >
             <Box position="relative" mb={4}>
-              <Heading size="lg" mb={1}>✨ Generate Quiz with AI</Heading>
+              <Heading size="lg" mb={1}>
+                ✨ Generate Quiz with AI
+              </Heading>
               <Button
                 position="absolute"
                 top={-2}
@@ -180,7 +187,10 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
                   max={20}
                   value={formData.numQuestions}
                   onChange={(e) =>
-                    handleInputChange("numQuestions", parseInt(e.target.value) || 5)
+                    handleInputChange(
+                      "numQuestions",
+                      parseInt(e.target.value) || 5
+                    )
                   }
                   placeholder="5"
                 />
@@ -206,7 +216,9 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
                 </Text>
                 <Input
                   value={formData.targetAge}
-                  onChange={(e) => handleInputChange("targetAge", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("targetAge", e.target.value)
+                  }
                   placeholder="e.g., 10-12, Adults, Teens"
                 />
               </Box>
@@ -218,7 +230,9 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
                 <HStack>
                   <Button
                     size="sm"
-                    variant={formData.difficulty === "easy" ? "solid" : "outline"}
+                    variant={
+                      formData.difficulty === "easy" ? "solid" : "outline"
+                    }
                     colorPalette={accentColor as any}
                     onClick={() => handleInputChange("difficulty", "easy")}
                   >
@@ -226,7 +240,9 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
                   </Button>
                   <Button
                     size="sm"
-                    variant={formData.difficulty === "medium" ? "solid" : "outline"}
+                    variant={
+                      formData.difficulty === "medium" ? "solid" : "outline"
+                    }
                     colorPalette={accentColor as any}
                     onClick={() => handleInputChange("difficulty", "medium")}
                   >
@@ -234,7 +250,9 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
                   </Button>
                   <Button
                     size="sm"
-                    variant={formData.difficulty === "hard" ? "solid" : "outline"}
+                    variant={
+                      formData.difficulty === "hard" ? "solid" : "outline"
+                    }
                     colorPalette={accentColor as any}
                     onClick={() => handleInputChange("difficulty", "hard")}
                   >
@@ -252,7 +270,7 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
                   onChange={(e) =>
                     handleInputChange("additionalInstructions", e.target.value)
                   }
-                  placeholder="e.g., Focus on 20th century events, Include famous scientists"
+                  placeholder="e.g., change time limit, make it more challenging"
                 />
               </Box>
             </VStack>

@@ -1,9 +1,11 @@
 # AI Quiz Generation Feature
 
 ## Overview
+
 The AI Quiz Generation feature allows users to automatically create quizzes using AI models through OpenRouter. OpenRouter provides access to multiple AI models (GPT-4, Claude, Gemini, Llama, etc.) through a single OpenAI-compatible API. Users can specify quiz parameters like title, topic, difficulty, and the AI will generate complete questions with multiple-choice options.
 
 ## Features
+
 - **Easy Setup**: Simple button click to generate quizzes
 - **Multiple AI Models**: Choose from GPT-4, Claude, Gemini, Llama, and more
 - **Customizable Parameters**:
@@ -21,6 +23,7 @@ The AI Quiz Generation feature allows users to automatically create quizzes usin
 ## Setup Instructions
 
 ### 1. Install Dependencies
+
 ```bash
 npm install
 ```
@@ -28,19 +31,23 @@ npm install
 This will install the `openai` package (v4.73.0) which is compatible with OpenRouter.
 
 ### 2. Get OpenRouter API Key
+
 1. Go to [OpenRouter](https://openrouter.ai/keys)
 2. Sign up or log in
 3. Click "Create Key"
 4. Copy the API key (it starts with `sk-or-v1-...`)
 
 ### 3. Configure Environment Variables
+
 Add your OpenRouter API key to the `.env` file:
+
 ```env
 OPENROUTER_API_KEY=sk-or-v1-your-actual-key-here
 AI_MODEL=openai/gpt-4o-mini
 ```
 
 **Popular Model Options:**
+
 - `openai/gpt-4o-mini` - Fast, cheap, good quality (recommended for testing)
 - `openai/gpt-4o` - Best quality, more expensive
 - `anthropic/claude-3.5-sonnet` - Excellent reasoning and creativity
@@ -52,11 +59,13 @@ AI_MODEL=openai/gpt-4o-mini
 ### 4. Start the Development Servers
 
 **Terminal 1 - Backend Server:**
+
 ```bash
 node server/index.js
 ```
 
 **Terminal 2 - Frontend Dev Server:**
+
 ```bash
 npm run dev
 ```
@@ -64,6 +73,7 @@ npm run dev
 ## Usage Guide
 
 ### For Users
+
 1. Navigate to "Create Quiz" page
 2. Click the **"Generate with AI"** button (with sparkle icon ✨)
 3. Fill in the quiz parameters:
@@ -79,6 +89,7 @@ npm run dev
 7. Click "Create Quiz" to save
 
 ### Example Use Cases
+
 - **Teachers**: Generate educational quizzes for students
 - **Trainers**: Create assessment quizzes for courses
 - **Fun**: Generate trivia quizzes for game nights
@@ -87,9 +98,11 @@ npm run dev
 ## Technical Details
 
 ### Backend API Endpoint
+
 **POST** `/api/generate-quiz`
 
 **Request Body:**
+
 ```json
 {
   "title": "World History Quiz",
@@ -102,6 +115,7 @@ npm run dev
 ```
 
 **Response:**
+
 ```json
 {
   "title": "World History Quiz",
@@ -112,7 +126,12 @@ npm run dev
       "question": "Who was the first president of the United States?",
       "type": "text",
       "answerType": "single",
-      "options": ["George Washington", "Thomas Jefferson", "John Adams", "Benjamin Franklin"],
+      "options": [
+        "George Washington",
+        "Thomas Jefferson",
+        "John Adams",
+        "Benjamin Franklin"
+      ],
       "correctOption": 0,
       "imageUrl": "",
       "points": 1,
@@ -124,33 +143,35 @@ npm run dev
 ```
 
 ### Files Modified/Created
+
 - **Frontend**:
   - `/src/components/AIQuizGenerator/AIQuizGenerator.tsx` - AI generation modal
   - `/src/pages/Home/CreateQuiz/CreateQuiz.tsx` - Updated with AI button
   - `/vite.config.ts` - Added API proxy
-  
 - **Backend**:
   - `/server/ai-quiz-routes.js` - API routes for quiz generation
   - `/server/index.js` - Integrated AI routes
-  
 - **Configuration**:
   - `/package.json` - Added OpenAI dependency
   - `/.env` - Added OPENAI_API_KEY
   - `/.env.example` - Template for environment variables
 
 ### AI Model Details
+
 - **Provider**: OpenRouter (supports multiple AI providers)
 - **Default Model**: GPT-4o-mini
 - **Temperature**: 0.8 (for creative variety)
 - **Response Format**: JSON mode for structured output
 - **Cost**: Varies by model:
+
   - GPT-4o-mini: ~$0.15 per 1M input tokens, ~$0.60 per 1M output tokens
   - Claude 3.5 Sonnet: ~$3 per 1M input tokens, ~$15 per 1M output tokens
   - Gemini Pro: ~$0.50 per 1M input tokens, ~$1.50 per 1M output tokens
-  
+
   Typical quiz generation: ~$0.001-0.01 per quiz
 
 **Why OpenRouter?**
+
 - Access to 100+ models through one API
 - Automatic fallbacks if a model is down
 - Competitive pricing
@@ -160,6 +181,7 @@ npm run dev
 ## Troubleshooting
 
 ### "Failed to generate quiz"
+
 - **Check API Key**: Ensure `OPENROUTER_API_KEY` is set correctly in `.env`
 - **Check Credits**: Verify your OpenRouter account has credits
 - **Check Server**: Make sure backend server is running on port 5000
@@ -167,7 +189,9 @@ npm run dev
 - **Try Different Model**: Some models may be temporarily unavailable
 
 ### Model Selection
+
 You can change the AI model by updating `AI_MODEL` in `.env`:
+
 ```env
 AI_MODEL=anthropic/claude-3.5-sonnet
 ```
@@ -175,21 +199,25 @@ AI_MODEL=anthropic/claude-3.5-sonnet
 Or leave it unset to use the default (GPT-4o-mini).
 
 ### Quiz generates but doesn't fill form
+
 - Clear browser cache
 - Check browser console for JavaScript errors
 - Verify the response format matches expected structure
 
 ### Server won't start
+
 - Check if port 5000 is already in use
 - Ensure all dependencies are installed (`npm install`)
 - Verify `.env` file exists and is properly formatted
 
 ### Proxy errors in development
+
 - Make sure backend is running before starting frontend
 - Check `vite.config.ts` proxy configuration
 - Verify backend is on `http://localhost:5000`
 
 ## Cost Considerations
+
 - Each quiz generation typically costs $0.001-0.01 USD (depending on model)
 - GPT-4o-mini is the most cost-effective option
 - Set up spending limits in OpenRouter dashboard
@@ -197,6 +225,7 @@ Or leave it unset to use the default (GPT-4o-mini).
 - OpenRouter shows real-time costs per request
 
 ## Security Notes
+
 - Never expose your API key in client-side code
 - All API calls go through your backend server
 - API key is stored securely in `.env` file
@@ -205,6 +234,7 @@ Or leave it unset to use the default (GPT-4o-mini).
 - OpenRouter provides built-in rate limiting and abuse detection
 
 ## Future Enhancements
+
 - [ ] Support for image-based questions
 - [ ] Multiple AI model selection in UI
 - [ ] Question difficulty validation
@@ -215,7 +245,9 @@ Or leave it unset to use the default (GPT-4o-mini).
 - [ ] Model comparison feature
 
 ## Support
+
 For issues or questions:
+
 1. Check this documentation
 2. Review server logs for errors
 3. Check OpenRouter status: https://openrouter.ai/status
@@ -223,6 +255,7 @@ For issues or questions:
 5. OpenRouter Discord: https://discord.gg/openrouter
 
 ## Useful Links
+
 - **OpenRouter Dashboard**: https://openrouter.ai/
 - **API Keys**: https://openrouter.ai/keys
 - **Model Pricing**: https://openrouter.ai/models

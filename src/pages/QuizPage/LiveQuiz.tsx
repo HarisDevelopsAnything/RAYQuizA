@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { io, Socket } from "socket.io-client";
-import { Button, Badge, Separator } from "@chakra-ui/react";
+import { Button, Badge, Separator, Box, Heading, Text, Portal, VStack } from "@chakra-ui/react";
 import QuizOps from "@/components/QuizOps/QuizOps";
 import { toaster } from "@/components/ui/toaster";
+import { MdWarning, MdClose } from "react-icons/md";
 import "./LiveQuiz.css";
 
 interface Participant {
@@ -150,6 +151,9 @@ const LiveQuiz = () => {
   } | null>(null);
   const [lastSummary, setLastSummary] = useState<QuestionSummary[]>([]);
   const [socketConnected, setSocketConnected] = useState(false);
+  const [connectionType, setConnectionType] = useState<"websocket" | "polling" | null>(null);
+  const [showConnectionWarning, setShowConnectionWarning] = useState(false);
+  const [acknowledgedWarning, setAcknowledgedWarning] = useState(false);
 
   useEffect(() => {
     if (!quizCode) {
@@ -180,6 +184,16 @@ const LiveQuiz = () => {
     socket.on("connect", () => {
       setSocketConnected(true);
       setClientSocketId(socket.id ?? null);
+      
+      // Detect connection type
+      const transport = socket.io.engine.transport.name;
+      setConnectionType(transport as "websocket" | "polling");
+      
+      // Show warning if using polling (WebSocket blocked)
+      if (transport === "polling") {
+        setShowConnectionWarning(true);
+      }
+      
       socket.emit("join-lobby", {
         quizCode,
         player: {
@@ -442,6 +456,84 @@ const LiveQuiz = () => {
 
   return (
     <div className="live-page">
+      {/* Connection Warning Modal */}
+      {showConnectionWarning && !acknowledgedWarning && connectionType === "polling" && (
+        <Portal>
+          <Box
+            position="fixed"
+            top={0}
+            left={0}
+            right={0}
+            bottom={0}
+            bg="blackAlpha.700"
+            zIndex={2000}
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+          >
+            <Box
+              bg="bg.panel"
+              borderRadius="lg"
+              boxShadow="2xl"
+              p={6}
+              maxW="500px"
+              width="90%"
+              position="relative"
+            >
+              <Box display="flex" alignItems="center" mb={4} color="orange.500">
+                <MdWarning size={32} />
+                <Heading size="lg" ml={2}>
+                  Network Restriction Detected
+                </Heading>
+              </Box>
+
+              <VStack align="stretch" gap={3} mb={4}>
+                <Text>
+                  <strong>WebSocket connections are blocked</strong> on your network
+                  (likely due to firewall or proxy restrictions).
+                </Text>
+                
+                <Text>
+                  The quiz will use <strong>polling</strong> as a fallback, but this may cause:
+                </Text>
+                
+                <Box as="ul" pl={6}>
+                  <li>⚠️ Slight delays in updates (1-2 seconds)</li>
+                  <li>⚠️ Increased data usage</li>
+                  <li>⚠️ Occasional connection hiccups</li>
+                  <li>⚠️ Timer synchronization issues</li>
+                </Box>
+
+                <Text fontSize="sm" color="gray.500">
+                  <strong>Recommended:</strong> Use a different network (mobile hotspot, home WiFi) or VPN for better experience.
+                </Text>
+              </VStack>
+
+              <Box display="flex" gap={3} justifyContent="flex-end">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    socketRef.current?.disconnect();
+                    navigate("/join");
+                  }}
+                >
+                  Cancel & Leave
+                </Button>
+                <Button
+                  colorPalette="orange"
+                  onClick={() => {
+                    setAcknowledgedWarning(true);
+                    setShowConnectionWarning(false);
+                  }}
+                >
+                  Continue Anyway
+                </Button>
+              </Box>
+            </Box>
+          </Box>
+        </Portal>
+      )}
+
       <header className="live-header">
         <div>
           <h1>{quizMeta?.title || "RAYQuizA Live Quiz"}</h1>

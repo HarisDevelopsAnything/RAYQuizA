@@ -12,7 +12,6 @@ import { FaArrowRight } from "react-icons/fa";
 import Interesting from "@/components/general/Interesting/Interesting";
 import { useNavigate } from "react-router-dom";
 import TopBar from "@/components/general/TopBar/TopBar";
-import Footer from "@/components/general/Footer/Footer";
 import { BiHelpCircle } from "react-icons/bi";
 import { MdDifference } from "react-icons/md";
 import { BsGithub } from "react-icons/bs";

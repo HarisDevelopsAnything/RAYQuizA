@@ -164,8 +164,12 @@ const LiveQuiz = () => {
     }
 
     const realtimeUrl = getRealtimeUrl();
+    // Allow polling fallback (don't force websocket-only) so the client can
+    // connect successfully behind proxies/load-balancers (Render/Cloudflare).
     const socket = io(realtimeUrl, {
-      transports: ["websocket"],
+      // by default socket.io will try polling then upgrade to websocket.
+      // specifying transports with both ensures a reliable connection.
+      transports: ["polling", "websocket"],
       autoConnect: true,
       reconnectionAttempts: 5,
       withCredentials: true,

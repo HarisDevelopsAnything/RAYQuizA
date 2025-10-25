@@ -205,6 +205,30 @@ const LiveQuiz = () => {
         setShowConnectionWarning(true);
       }
 
+      // Listen for transport upgrade attempts
+      socket.io.engine.on("upgrade", (newTransport: any) => {
+        console.log("Transport upgraded to:", newTransport.name);
+        setConnectionType(newTransport.name as "websocket" | "polling");
+      });
+
+      // Listen for upgrade errors (WebSocket blocked)
+      socket.io.engine.on("upgradeError", (error: any) => {
+        console.log("WebSocket upgrade failed, stuck on polling:", error);
+        setConnectionType("polling");
+        setShowConnectionWarning(true);
+      });
+
+      // Check after 3 seconds if still on polling (WebSocket blocked)
+      setTimeout(() => {
+        const currentTransport = socket.io.engine.transport.name;
+        console.log("Connection check after 3s - transport:", currentTransport);
+        if (currentTransport === "polling") {
+          console.log("Still on polling after 3s, showing warning");
+          setConnectionType("polling");
+          setShowConnectionWarning(true);
+        }
+      }, 3000);
+
       socket.emit("join-lobby", {
         quizCode,
         player: {

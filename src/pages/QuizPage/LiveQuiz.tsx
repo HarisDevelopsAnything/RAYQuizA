@@ -159,7 +159,9 @@ const LiveQuiz = () => {
   const socketRef = useRef<Socket | null>(null);
   const playerIdRef = useRef<string>(createPlayerId(locationState));
   const playerNameRef = useRef<string>(createPlayerName(locationState));
-  const playerEmailRef = useRef<string | undefined>(getPlayerEmail(locationState));
+  const playerEmailRef = useRef<string | undefined>(
+    getPlayerEmail(locationState)
+  );
 
   const [quizMeta, setQuizMeta] = useState<QuizMeta | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -192,7 +194,9 @@ const LiveQuiz = () => {
   const [supervisorMode, setSupervisorMode] = useState(false);
   const [quizInterrupted, setQuizInterrupted] = useState(false);
   const [acknowledgedWarning, setAcknowledgedWarning] = useState(false);
-  const [previousScoreboard, setPreviousScoreboard] = useState<ScoreEntry[]>([]);
+  const [previousScoreboard, setPreviousScoreboard] = useState<ScoreEntry[]>(
+    []
+  );
   const [animatingScores, setAnimatingScores] = useState(false);
 
   useEffect(() => {
@@ -312,18 +316,21 @@ const LiveQuiz = () => {
       });
     });
 
-    socket.on("quiz-data", (payload: QuizMeta & { supervisorMode?: boolean }) => {
-      setQuizMeta(payload);
-      if (payload.supervisorMode) {
-        setSupervisorMode(true);
-        toaster.create({
-          title: "Supervisor Mode",
-          description: "You're supervising this quiz. You won't participate.",
-          type: "info",
-          duration: 4000,
-        });
+    socket.on(
+      "quiz-data",
+      (payload: QuizMeta & { supervisorMode?: boolean }) => {
+        setQuizMeta(payload);
+        if (payload.supervisorMode) {
+          setSupervisorMode(true);
+          toaster.create({
+            title: "Supervisor Mode",
+            description: "You're supervising this quiz. You won't participate.",
+            type: "info",
+            duration: 4000,
+          });
+        }
       }
-    });
+    );
 
     socket.on(
       "lobby-update",
@@ -384,17 +391,17 @@ const LiveQuiz = () => {
         summary: QuestionSummary[];
       }) => {
         setPhase("review");
-        
+
         // Store previous scoreboard for animation
         setPreviousScoreboard(scoreboard);
-        
+
         // Update scoreboard with animation
         setScoreboard(entries);
         setAnimatingScores(true);
-        
+
         // Reset animation flag after animation completes
         setTimeout(() => setAnimatingScores(false), 600);
-        
+
         setLastSummary(summary);
         setQuestionEndsAt(null);
         setTimeRemaining(0);
@@ -434,12 +441,12 @@ const LiveQuiz = () => {
 
     socket.on(
       "quiz-ended",
-      ({ 
-        scoreboard: entries, 
-        interrupted, 
-        reason 
-      }: { 
-        scoreboard: ScoreEntry[]; 
+      ({
+        scoreboard: entries,
+        interrupted,
+        reason,
+      }: {
+        scoreboard: ScoreEntry[];
         interrupted?: boolean;
         reason?: string;
       }) => {
@@ -449,7 +456,7 @@ const LiveQuiz = () => {
         setQuestionEndsAt(null);
         setTimeRemaining(0);
         setTimeLimit(null);
-        
+
         if (interrupted) {
           setQuizInterrupted(true);
           toaster.create({
@@ -522,11 +529,11 @@ const LiveQuiz = () => {
     if (!socketRef.current) {
       return;
     }
-    
+
     const confirmed = window.confirm(
       "Are you sure you want to stop this quiz? Current scores will be saved."
     );
-    
+
     if (confirmed) {
       socketRef.current.emit("stop-quiz");
     }
@@ -724,14 +731,16 @@ const LiveQuiz = () => {
               <h2>Lobby</h2>
               {supervisorMode ? (
                 <p>
-                  <Badge colorPalette="purple" mb={2}>Supervisor Mode</Badge>
+                  <Badge colorPalette="purple" mb={2}>
+                    Supervisor Mode
+                  </Badge>
                   <br />
                   You're supervising this quiz. Start when players are ready.
                 </p>
               ) : (
                 <p>
-                  Waiting for players. When everyone is ready, the host can start
-                  the quiz.
+                  Waiting for players. When everyone is ready, the host can
+                  start the quiz.
                 </p>
               )}
               <Separator marginBlock="1rem" />
@@ -796,13 +805,16 @@ const LiveQuiz = () => {
                   <h2>Question {questionIndex + 1} Results</h2>
                   <div className="supervisor-results">
                     <div className="correct-answers">
-                      <h3 style={{ color: "#4CAF50" }}>✓ Correct ({lastSummary.filter(s => s.isCorrect).length})</h3>
+                      <h3 style={{ color: "#4CAF50" }}>
+                        ✓ Correct (
+                        {lastSummary.filter((s) => s.isCorrect).length})
+                      </h3>
                       <ul>
                         {lastSummary
-                          .filter(s => s.isCorrect)
+                          .filter((s) => s.isCorrect)
                           .map((entry) => (
                             <li key={entry.userId} style={{ color: "#4CAF50" }}>
-                              {entry.name} 
+                              {entry.name}
                               {entry.timeBonus && entry.timeBonus > 1 && (
                                 <span style={{ marginLeft: "0.5rem" }}>
                                   {entry.timeBonus === 2.0 && "⚡"}
@@ -810,32 +822,43 @@ const LiveQuiz = () => {
                                   {entry.timeBonus === 1.5 && "⭐"}
                                 </span>
                               )}
-                              <span style={{ float: "right", fontWeight: "bold" }}>
+                              <span
+                                style={{ float: "right", fontWeight: "bold" }}
+                              >
                                 +{entry.gained.toFixed(2)}
                               </span>
                             </li>
                           ))}
                       </ul>
-                      {lastSummary.filter(s => s.isCorrect).length === 0 && (
-                        <p style={{ fontStyle: "italic", color: "#999" }}>No one got it right</p>
+                      {lastSummary.filter((s) => s.isCorrect).length === 0 && (
+                        <p style={{ fontStyle: "italic", color: "#999" }}>
+                          No one got it right
+                        </p>
                       )}
                     </div>
                     <div className="incorrect-answers">
-                      <h3 style={{ color: "#F44336" }}>✗ Incorrect ({lastSummary.filter(s => !s.isCorrect).length})</h3>
+                      <h3 style={{ color: "#F44336" }}>
+                        ✗ Incorrect (
+                        {lastSummary.filter((s) => !s.isCorrect).length})
+                      </h3>
                       <ul>
                         {lastSummary
-                          .filter(s => !s.isCorrect)
+                          .filter((s) => !s.isCorrect)
                           .map((entry) => (
                             <li key={entry.userId} style={{ color: "#F44336" }}>
                               {entry.name}
-                              <span style={{ float: "right", fontWeight: "bold" }}>
+                              <span
+                                style={{ float: "right", fontWeight: "bold" }}
+                              >
                                 {entry.gained.toFixed(2)}
                               </span>
                             </li>
                           ))}
                       </ul>
-                      {lastSummary.filter(s => !s.isCorrect).length === 0 && (
-                        <p style={{ fontStyle: "italic", color: "#999" }}>Everyone got it right!</p>
+                      {lastSummary.filter((s) => !s.isCorrect).length === 0 && (
+                        <p style={{ fontStyle: "italic", color: "#999" }}>
+                          Everyone got it right!
+                        </p>
                       )}
                     </div>
                   </div>
@@ -859,9 +882,13 @@ const LiveQuiz = () => {
                     <p>
                       {playerSummary
                         ? playerSummary.isCorrect
-                          ? `Nice! You earned ${playerSummary.gained.toFixed(2)} point${
-                              playerSummary.gained === 1 ? "" : "s"
-                            }${playerSummary.timeBonus ? ` (${playerSummary.timeBonus}x speed bonus!)` : ""}.`
+                          ? `Nice! You earned ${playerSummary.gained.toFixed(
+                              2
+                            )} point${playerSummary.gained === 1 ? "" : "s"}${
+                              playerSummary.timeBonus
+                                ? ` (${playerSummary.timeBonus}x speed bonus!)`
+                                : ""
+                            }.`
                           : playerSummary.gained < 0
                           ? `Tough luck. ${Math.abs(
                               playerSummary.gained
@@ -870,11 +897,21 @@ const LiveQuiz = () => {
                         : "You joined mid-question. Scores resume next round."}
                     </p>
                     {playerSummary?.timeBonus && playerSummary.isCorrect && (
-                      <p className="time-bonus-info" style={{ fontSize: "0.9em", color: "#4CAF50", marginTop: "0.5rem" }}>
-                        🚀 Speed Bonus: 
-                        {playerSummary.timeBonus === 2.0 && " ⚡ Lightning Fast! (within 10%)"}
-                        {playerSummary.timeBonus === 1.75 && " 🔥 Super Quick! (within 25%)"}
-                        {playerSummary.timeBonus === 1.5 && " ⭐ Nice Speed! (within 50%)"}
+                      <p
+                        className="time-bonus-info"
+                        style={{
+                          fontSize: "0.9em",
+                          color: "#4CAF50",
+                          marginTop: "0.5rem",
+                        }}
+                      >
+                        🚀 Speed Bonus:
+                        {playerSummary.timeBonus === 2.0 &&
+                          " ⚡ Lightning Fast! (within 10%)"}
+                        {playerSummary.timeBonus === 1.75 &&
+                          " 🔥 Super Quick! (within 25%)"}
+                        {playerSummary.timeBonus === 1.5 &&
+                          " ⭐ Nice Speed! (within 50%)"}
                         {playerSummary.timeBonus === 1.0 && " ✓ Good Job!"}
                       </p>
                     )}
@@ -884,7 +921,13 @@ const LiveQuiz = () => {
                           <span>
                             {entry.name}
                             {entry.timeBonus && entry.timeBonus > 1 && (
-                              <span style={{ fontSize: "0.8em", color: "#FF9800", marginLeft: "0.5rem" }}>
+                              <span
+                                style={{
+                                  fontSize: "0.8em",
+                                  color: "#FF9800",
+                                  marginLeft: "0.5rem",
+                                }}
+                              >
                                 {entry.timeBonus === 2.0 && "⚡"}
                                 {entry.timeBonus === 1.75 && "🔥"}
                                 {entry.timeBonus === 1.5 && "⭐"}
@@ -892,7 +935,9 @@ const LiveQuiz = () => {
                             )}
                           </span>
                           <span>
-                            {entry.gained > 0 ? `+${entry.gained.toFixed(2)}` : entry.gained.toFixed(2)}
+                            {entry.gained > 0
+                              ? `+${entry.gained.toFixed(2)}`
+                              : entry.gained.toFixed(2)}
                           </span>
                         </li>
                       ))}
@@ -907,8 +952,8 @@ const LiveQuiz = () => {
             <div className="complete-wrapper">
               <h2>{quizInterrupted ? "Quiz Stopped" : "Quiz Complete"}</h2>
               <p>
-                {quizInterrupted 
-                  ? "The quiz was stopped by the host. Here are the scores at the time of stopping." 
+                {quizInterrupted
+                  ? "The quiz was stopped by the host. Here are the scores at the time of stopping."
                   : "Thanks for playing! Here are the final standings."}
               </p>
               <ol>
@@ -944,10 +989,15 @@ const LiveQuiz = () => {
             <ol className="scoreboard-list">
               {sortedScoreboard.map((entry, index) => {
                 // Check if position changed
-                const previousIndex = previousScoreboard.findIndex(p => p.userId === entry.userId);
-                const positionChanged = animatingScores && previousIndex !== -1 && previousIndex !== index;
+                const previousIndex = previousScoreboard.findIndex(
+                  (p) => p.userId === entry.userId
+                );
+                const positionChanged =
+                  animatingScores &&
+                  previousIndex !== -1 &&
+                  previousIndex !== index;
                 const isTopPlayer = index === 0 && sortedScoreboard.length > 1;
-                
+
                 return (
                   <li
                     key={entry.userId}

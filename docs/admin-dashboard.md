@@ -1,9 +1,11 @@
 # Admin Dashboard Documentation
 
 ## Overview
+
 The Admin Dashboard provides comprehensive administrative controls for managing users, quizzes, and monitoring system statistics.
 
 ## Access
+
 - **URL**: `/admin`
 - **Authentication**: Only users with admin email addresses can access this dashboard
 - Admin emails are configured in `server/admin-routes.js` in the `ADMIN_EMAILS` array
@@ -11,12 +13,14 @@ The Admin Dashboard provides comprehensive administrative controls for managing 
 ## Features
 
 ### 1. System Statistics (Dashboard Cards)
+
 - **Total Users**: Count of all registered users
 - **Total Quizzes**: Count of all created quizzes
 - **Banned Users**: Count of currently banned users
 - **Quizzes Today**: Count of quizzes created today
 
 ### 2. User Management
+
 - **View All Users**: See list of all registered users with their:
   - Name
   - Email address
@@ -31,6 +35,7 @@ The Admin Dashboard provides comprehensive administrative controls for managing 
   - Requires confirmation
 
 ### 3. Quiz Management
+
 - **View All Quizzes**: See complete list of quizzes with:
   - Title
   - Quiz code
@@ -42,18 +47,20 @@ The Admin Dashboard provides comprehensive administrative controls for managing 
   - Requires confirmation
 
 ### 4. Real-time Updates
+
 - **Refresh Button**: Manually refresh all data
 - Data is automatically loaded when accessing the dashboard
 
 ## Configuration
 
 ### Adding Admin Users
+
 Edit `server/admin-routes.js`:
 
 ```javascript
 const ADMIN_EMAILS = [
-  'harisdevelops@gmail.com',
-  'your-admin-email@example.com', // Add more admin emails here
+  "harisdevelops@gmail.com",
+  "your-admin-email@example.com", // Add more admin emails here
 ];
 ```
 

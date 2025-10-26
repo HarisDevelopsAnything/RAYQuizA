@@ -98,7 +98,7 @@ const Home = () => {
     localStorage.removeItem("userId");
     localStorage.removeItem("userName");
     localStorage.removeItem("token");
-    
+
     // Show success message
     toaster.create({
       title: "Logged out successfully",
@@ -106,7 +106,7 @@ const Home = () => {
       type: "success",
       duration: 3000,
     });
-    
+
     // Navigate to login page
     navigate("/login", { replace: true });
   };
@@ -114,9 +114,9 @@ const Home = () => {
   return (
     <Box>
       <Box position="fixed" top="0" left="0" right="0" zIndex={1000}>
-        <NavBar 
-          username={user?.name || ""} 
-          profilePic={user?.picture || ""} 
+        <NavBar
+          username={user?.name || ""}
+          profilePic={user?.picture || ""}
           onLogout={handleLogout}
           onMenuClick={toggleMobileMenu}
           showMenuButton={isMobile}
@@ -137,7 +137,7 @@ const Home = () => {
             <Sidebar setCurrentPage={setCurrentPage} onLogout={handleLogout} />
           </Box>
         </Show>
-        
+
         {/* Mobile Drawer Menu */}
         <Drawer.Root
           open={isMobileMenuOpen}
@@ -152,15 +152,15 @@ const Home = () => {
               <Drawer.CloseTrigger />
             </Drawer.Header>
             <Drawer.Body p={0}>
-              <Sidebar 
+              <Sidebar
                 setCurrentPage={(page) => {
                   setCurrentPage(page);
                   setIsMobileMenuOpen(false);
-                }} 
+                }}
                 onLogout={() => {
                   setIsMobileMenuOpen(false);
                   handleLogout();
-                }} 
+                }}
               />
             </Drawer.Body>
           </Drawer.Content>
@@ -202,7 +202,10 @@ const Home = () => {
           author={selectedQuiz.createdBy || "Unknown"}
           duration={
             selectedQuiz.questions && Array.isArray(selectedQuiz.questions)
-              ? `${selectedQuiz.questions.reduce((total, q) => total + (q.timeLimit || 30), 0)}s`
+              ? `${selectedQuiz.questions.reduce(
+                  (total, q) => total + (q.timeLimit || 30),
+                  0
+                )}s`
               : "0s"
           }
           categories={selectedQuiz.categories || []}

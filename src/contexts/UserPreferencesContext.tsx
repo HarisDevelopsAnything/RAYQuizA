@@ -358,23 +358,16 @@ export const UserPreferencesProvider: React.FC<
       "desired:",
       desired
     );
-    // Apply only if different to avoid feedback loops
+    // Apply the desired theme directly
     if (desired === "system") {
-      if (theme !== "system") {
-        console.log("[ThemeEffect] setting theme to system");
-        setTheme("system");
-      } else {
-        console.log("[ThemeEffect] theme already system, skipping");
-      }
+      console.log("[ThemeEffect] setting theme to system");
+      setTheme("system");
     } else if (desired === "light" || desired === "dark") {
-      if (resolvedTheme !== desired) {
-        console.log("[ThemeEffect] setting theme to", desired);
-        setTheme(desired);
-      } else {
-        console.log("[ThemeEffect] resolvedTheme matches desired, skipping");
-      }
+      console.log("[ThemeEffect] setting theme to", desired);
+      setTheme(desired);
     }
-  }, [preferences.appearance.defaultTheme, setTheme, resolvedTheme, theme]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preferences.appearance.defaultTheme]); // Only depend on defaultTheme to avoid infinite loops
 
   // Apply accent color preference
   useEffect(() => {

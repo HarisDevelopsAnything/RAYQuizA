@@ -38,12 +38,22 @@ const Landing = () => {
         backgroundRepeat="no-repeat"
         backgroundSize={"cover"}
       >
-        <Heading size={{ base: "3xl", md: "5xl", lg: "6xl" }} textAlign="center" px={{ base: "4", md: "0" }}>
+        <Heading
+          size={{ base: "3xl", md: "5xl", lg: "6xl" }}
+          textAlign="center"
+          px={{ base: "4", md: "0" }}
+        >
           <Highlight query="Quiz" styles={{ color: "teal.400" }}>
             Welcome to RAYQuizA!
           </Highlight>
         </Heading>
-        <Text fontSize={{ base: "lg", md: "2xl", lg: "3xl" }} color="fg.muted" fontWeight={"bold"} textAlign="center" px={{ base: "4", md: "0" }}>
+        <Text
+          fontSize={{ base: "lg", md: "2xl", lg: "3xl" }}
+          color="fg.muted"
+          fontWeight={"bold"}
+          textAlign="center"
+          px={{ base: "4", md: "0" }}
+        >
           Realtime Assessment Yielding Quiz App
         </Text>
         <Button
@@ -57,8 +67,17 @@ const Landing = () => {
         >
           Let's get quizzing! <FaArrowRight />
         </Button>
-        <Text mt={2} fontSize={{ base: "sm", md: "md" }}>or... maybe you want to know more?</Text>
-        <SimpleGrid columns={{ base: 1, md: 2 }} minChildWidth={"sm"} gap={4} mt={4} w="full" px={{ base: "4", md: "0" }}>
+        <Text mt={2} fontSize={{ base: "sm", md: "md" }}>
+          or... maybe you want to know more?
+        </Text>
+        <SimpleGrid
+          columns={{ base: 1, md: 2 }}
+          minChildWidth={"sm"}
+          gap={4}
+          mt={4}
+          w="full"
+          px={{ base: "4", md: "0" }}
+        >
           <Interesting
             title="What is with the name?"
             desc="The site was named after Rayquaza, the legendary Pokemon. Reason? Because we love Pokemon! And it was a catchy name."

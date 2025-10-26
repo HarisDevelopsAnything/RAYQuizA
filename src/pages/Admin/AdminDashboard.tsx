@@ -17,8 +17,8 @@ import { toaster } from "@/components/ui/toaster";
 import NavBar from "@/components/general/NavBar/NavBar";
 
 // API base URL - use relative URL in dev, full URL in production
-const API_BASE_URL = import.meta.env.DEV 
-  ? "/api/admin" 
+const API_BASE_URL = import.meta.env.DEV
+  ? "/api/admin"
   : "https://rayquiza-backend.onrender.com/api/admin";
 
 interface User {
@@ -77,14 +77,11 @@ const AdminDashboard = () => {
       }
 
       const user = JSON.parse(storedUser);
-      const response = await fetch(
-        `${API_BASE_URL}/verify`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: user.email, userId: user._id }),
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email, userId: user._id }),
+      });
 
       if (response.ok) {
         setIsAdmin(true);
@@ -109,13 +106,17 @@ const AdminDashboard = () => {
     try {
       const storedUser = localStorage.getItem("user");
       if (!storedUser) return;
-      
+
       const user = JSON.parse(storedUser);
-      const queryParams = `?email=${encodeURIComponent(user.email)}&userId=${user._id}`;
-      
+      const queryParams = `?email=${encodeURIComponent(user.email)}&userId=${
+        user._id
+      }`;
+
       const [usersRes, quizzesRes, statsRes] = await Promise.all([
         fetch(`${API_BASE_URL}/users${queryParams}`),
-        fetch(`${API_BASE_URL}/quizzes?email=${encodeURIComponent(user.email)}`),
+        fetch(
+          `${API_BASE_URL}/quizzes?email=${encodeURIComponent(user.email)}`
+        ),
         fetch(`${API_BASE_URL}/stats?email=${encodeURIComponent(user.email)}`),
       ]);
 
@@ -132,15 +133,12 @@ const AdminDashboard = () => {
       const storedUser = localStorage.getItem("user");
       if (!storedUser) return;
       const user = JSON.parse(storedUser);
-      
-      const response = await fetch(
-        `${API_BASE_URL}/users/${userId}/ban`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ banned, email: user.email }),
-        }
-      );
+
+      const response = await fetch(`${API_BASE_URL}/users/${userId}/ban`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ banned, email: user.email }),
+      });
 
       if (response.ok) {
         toaster.create({
@@ -165,9 +163,11 @@ const AdminDashboard = () => {
       const storedUser = localStorage.getItem("user");
       if (!storedUser) return;
       const user = JSON.parse(storedUser);
-      
+
       const response = await fetch(
-        `${API_BASE_URL}/users/${userId}?email=${encodeURIComponent(user.email)}`,
+        `${API_BASE_URL}/users/${userId}?email=${encodeURIComponent(
+          user.email
+        )}`,
         { method: "DELETE" }
       );
 
@@ -194,9 +194,11 @@ const AdminDashboard = () => {
       const storedUser = localStorage.getItem("user");
       if (!storedUser) return;
       const user = JSON.parse(storedUser);
-      
+
       const response = await fetch(
-        `${API_BASE_URL}/quizzes/${quizId}?email=${encodeURIComponent(user.email)}`,
+        `${API_BASE_URL}/quizzes/${quizId}?email=${encodeURIComponent(
+          user.email
+        )}`,
         { method: "DELETE" }
       );
 
@@ -259,25 +261,53 @@ const AdminDashboard = () => {
         {/* Stats Cards */}
         {stats && (
           <HStack mb={8} gap={4} wrap="wrap">
-            <Box bg="blue.500" color="white" p={{ base: 4, md: 6 }} borderRadius="lg" flex={1} minW={{ base: "140px", md: "200px" }}>
+            <Box
+              bg="blue.500"
+              color="white"
+              p={{ base: 4, md: 6 }}
+              borderRadius="lg"
+              flex={1}
+              minW={{ base: "140px", md: "200px" }}
+            >
               <Text fontSize={{ base: "2xl", md: "3xl" }} fontWeight="bold">
                 {stats.totalUsers}
               </Text>
               <Text fontSize={{ base: "sm", md: "md" }}>Total Users</Text>
             </Box>
-            <Box bg="green.500" color="white" p={{ base: 4, md: 6 }} borderRadius="lg" flex={1} minW={{ base: "140px", md: "200px" }}>
+            <Box
+              bg="green.500"
+              color="white"
+              p={{ base: 4, md: 6 }}
+              borderRadius="lg"
+              flex={1}
+              minW={{ base: "140px", md: "200px" }}
+            >
               <Text fontSize={{ base: "2xl", md: "3xl" }} fontWeight="bold">
                 {stats.totalQuizzes}
               </Text>
               <Text fontSize={{ base: "sm", md: "md" }}>Total Quizzes</Text>
             </Box>
-            <Box bg="red.500" color="white" p={{ base: 4, md: 6 }} borderRadius="lg" flex={1} minW={{ base: "140px", md: "200px" }}>
+            <Box
+              bg="red.500"
+              color="white"
+              p={{ base: 4, md: 6 }}
+              borderRadius="lg"
+              flex={1}
+              minW={{ base: "140px", md: "200px" }}
+            >
               <Text fontSize={{ base: "2xl", md: "3xl" }} fontWeight="bold">
                 {stats.bannedUsers}
               </Text>
               <Text fontSize={{ base: "sm", md: "md" }}>Banned Users</Text>
             </Box>
-            <Box bg="purple.500" color="white" p={{ base: 4, md: 6 }} borderRadius="lg" flex={1} minW={{ base: "140px", md: "200px" }}>
+            <Box
+              bg="purple.500"
+              color="white"
+              p={{ base: 4, md: 6 }}
+              borderRadius="lg"
+              flex={1}
+              minW={{ base: "140px", md: "200px" }}
+            >
               <Text fontSize={{ base: "2xl", md: "3xl" }} fontWeight="bold">
                 {stats.quizzesToday}
               </Text>
@@ -300,10 +330,15 @@ const AdminDashboard = () => {
         </HStack>
 
         {/* Tabs */}
-        <Tabs.Root value={activeTab} onValueChange={(e) => setActiveTab(e.value)}>
+        <Tabs.Root
+          value={activeTab}
+          onValueChange={(e) => setActiveTab(e.value)}
+        >
           <Tabs.List>
             <Tabs.Trigger value="users">Users ({users.length})</Tabs.Trigger>
-            <Tabs.Trigger value="quizzes">Quizzes ({quizzes.length})</Tabs.Trigger>
+            <Tabs.Trigger value="quizzes">
+              Quizzes ({quizzes.length})
+            </Tabs.Trigger>
           </Tabs.List>
 
           {/* Users Tab */}
@@ -340,7 +375,9 @@ const AdminDashboard = () => {
                             aria-label={user.banned ? "Unban" : "Ban"}
                             size="sm"
                             colorPalette={user.banned ? "green" : "orange"}
-                            onClick={() => handleBanUser(user._id, !user.banned)}
+                            onClick={() =>
+                              handleBanUser(user._id, !user.banned)
+                            }
                           >
                             <MdBlock />
                           </IconButton>

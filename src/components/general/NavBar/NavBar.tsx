@@ -13,7 +13,13 @@ interface Props {
   showMenuButton?: boolean;
 }
 
-const NavBar = ({ username, profilePic, onLogout, onMenuClick, showMenuButton = false }: Props) => {
+const NavBar = ({
+  username,
+  profilePic,
+  onLogout,
+  onMenuClick,
+  showMenuButton = false,
+}: Props) => {
   return (
     <HStack
       height={"60px"}
@@ -24,8 +30,8 @@ const NavBar = ({ username, profilePic, onLogout, onMenuClick, showMenuButton = 
       gap={2}
     >
       {showMenuButton && onMenuClick && (
-        <IconButton 
-          aria-label="Menu" 
+        <IconButton
+          aria-label="Menu"
           onClick={onMenuClick}
           variant="ghost"
           size="lg"
@@ -42,7 +48,11 @@ const NavBar = ({ username, profilePic, onLogout, onMenuClick, showMenuButton = 
       ) : (
         <FaUser className="nav-avatar" />
       )}
-      <Heading size={{ base: "sm", md: "lg" }} truncate maxW={{ base: "150px", md: "none" }}>
+      <Heading
+        size={{ base: "sm", md: "lg" }}
+        truncate
+        maxW={{ base: "150px", md: "none" }}
+      >
         {username}
       </Heading>
       <Spacer />

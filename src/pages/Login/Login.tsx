@@ -199,7 +199,13 @@ const Login = () => {
         py={{ base: "8", md: "0" }}
         display={{ base: "none", sm: "flex" }}
       >
-        <Heading fontSize={{ base: "2xl", md: "40px" }} textAlign="center" px={4}>Welcome to RAYQuizA!</Heading>
+        <Heading
+          fontSize={{ base: "2xl", md: "40px" }}
+          textAlign="center"
+          px={4}
+        >
+          Welcome to RAYQuizA!
+        </Heading>
         <Text fontSize={{ base: "md", md: "lg" }}>A place for</Text>
         <Typewriter
           options={{

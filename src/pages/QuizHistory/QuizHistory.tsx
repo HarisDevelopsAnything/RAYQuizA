@@ -22,6 +22,9 @@ interface QuizHistoryEntry {
   participants: Participant[];
   completedAt: string;
   totalParticipants: number;
+  status?: "completed" | "interrupted";
+  questionsCompleted?: number;
+  totalQuestions?: number;
 }
 
 const QuizHistory = () => {
@@ -116,13 +119,23 @@ const QuizHistory = () => {
         <Card.Body>
           <HStack justifyContent="space-between" mb={2}>
             <Heading size="md">{entry.quizTitle}</Heading>
-            <Badge colorPalette={accentColor as any} variant="solid">
-              Code: {entry.quizCode}
-            </Badge>
+            <HStack>
+              {entry.status === "interrupted" && (
+                <Badge colorPalette="orange" variant="solid">
+                  Stopped
+                </Badge>
+              )}
+              <Badge colorPalette={accentColor as any} variant="solid">
+                Code: {entry.quizCode}
+              </Badge>
+            </HStack>
           </HStack>
           
           <Text fontSize="sm" color="gray.500" mb={3}>
             Completed: {formatDate(entry.completedAt)}
+            {entry.status === "interrupted" && entry.questionsCompleted !== undefined && (
+              <> • Stopped at question {entry.questionsCompleted} of {entry.totalQuestions}</>
+            )}
           </Text>
 
           <Text fontWeight="bold" mb={2}>

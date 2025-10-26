@@ -189,6 +189,8 @@ const LiveQuiz = () => {
     "websocket" | "polling" | null
   >(null);
   const [showConnectionWarning, setShowConnectionWarning] = useState(false);
+  const [supervisorMode, setSupervisorMode] = useState(false);
+  const [quizInterrupted, setQuizInterrupted] = useState(false);
   const [acknowledgedWarning, setAcknowledgedWarning] = useState(false);
 
   useEffect(() => {
@@ -261,6 +263,7 @@ const LiveQuiz = () => {
           name: playerNameRef.current,
           email: playerEmailRef.current,
           isHost: requestedHost,
+          supervisorMode: requestedHost, // If requesting host, default to supervisor mode
         },
       });
     });
@@ -279,13 +282,22 @@ const LiveQuiz = () => {
       navigate("/join", { replace: true });
     });
 
-    socket.on("host-rejected", () => {
+    socket.on("host-rejected", ({ reason }) => {
       toaster.create({
-        title: "Host already active",
-        description:
-          "You joined as a player because another host is controlling this lobby.",
-        type: "info",
-        duration: 4000,
+        title: "Cannot Join as Host",
+        description: reason || "Only the quiz creator can be the host.",
+        type: "error",
+        duration: 5000,
+      });
+      navigate("/join", { replace: true });
+    });
+
+    socket.on("host-confirmed", () => {
+      toaster.create({
+        title: "You're the host",
+        description: "You can start the quiz when ready.",
+        type: "success",
+        duration: 3000,
       });
     });
 
@@ -298,8 +310,17 @@ const LiveQuiz = () => {
       });
     });
 
-    socket.on("quiz-data", (payload: QuizMeta) => {
+    socket.on("quiz-data", (payload: QuizMeta & { supervisorMode?: boolean }) => {
       setQuizMeta(payload);
+      if (payload.supervisorMode) {
+        setSupervisorMode(true);
+        toaster.create({
+          title: "Supervisor Mode",
+          description: "You're supervising this quiz. You won't participate.",
+          type: "info",
+          duration: 4000,
+        });
+      }
     });
 
     socket.on(
@@ -401,13 +422,31 @@ const LiveQuiz = () => {
 
     socket.on(
       "quiz-ended",
-      ({ scoreboard: entries }: { scoreboard: ScoreEntry[] }) => {
+      ({ 
+        scoreboard: entries, 
+        interrupted, 
+        reason 
+      }: { 
+        scoreboard: ScoreEntry[]; 
+        interrupted?: boolean;
+        reason?: string;
+      }) => {
         setPhase("complete");
         setScoreboard(entries);
         setCurrentQuestion(null);
         setQuestionEndsAt(null);
         setTimeRemaining(0);
         setTimeLimit(null);
+        
+        if (interrupted) {
+          setQuizInterrupted(true);
+          toaster.create({
+            title: "Quiz Stopped",
+            description: reason || "The quiz was stopped by the host.",
+            type: "warning",
+            duration: 5000,
+          });
+        }
       }
     );
 
@@ -465,6 +504,20 @@ const LiveQuiz = () => {
       return;
     }
     socketRef.current.emit("host-next-question");
+  };
+
+  const handleStopQuiz = () => {
+    if (!socketRef.current) {
+      return;
+    }
+    
+    const confirmed = window.confirm(
+      "Are you sure you want to stop this quiz? Current scores will be saved."
+    );
+    
+    if (confirmed) {
+      socketRef.current.emit("stop-quiz");
+    }
   };
 
   const submitAnswer = (answers: number[]) => {
@@ -631,6 +684,15 @@ const LiveQuiz = () => {
               Start Quiz
             </Button>
           )}
+          {isHost && (phase === "question" || phase === "review") && (
+            <Button
+              colorPalette="red"
+              variant="outline"
+              onClick={handleStopQuiz}
+            >
+              Stop Quiz
+            </Button>
+          )}
           {isHost && phase === "review" && (
             <Button
               colorPalette="teal"
@@ -648,10 +710,18 @@ const LiveQuiz = () => {
           {phase === "lobby" && (
             <div className="lobby-state">
               <h2>Lobby</h2>
-              <p>
-                Waiting for players. When everyone is ready, the host can start
-                the quiz.
-              </p>
+              {supervisorMode ? (
+                <p>
+                  <Badge colorPalette="purple" mb={2}>Supervisor Mode</Badge>
+                  <br />
+                  You're supervising this quiz. Start when players are ready.
+                </p>
+              ) : (
+                <p>
+                  Waiting for players. When everyone is ready, the host can start
+                  the quiz.
+                </p>
+              )}
               <Separator marginBlock="1rem" />
               <ul className="participant-list">
                 {participants.map((participant) => (
@@ -663,7 +733,7 @@ const LiveQuiz = () => {
                   </li>
                 ))}
               </ul>
-              {participants.length === 0 && (
+              {participants.length === 0 && !supervisorMode && (
                 <p className="muted">
                   No one is here yet. Share the code to invite friends!
                 </p>
@@ -768,13 +838,17 @@ const LiveQuiz = () => {
 
           {phase === "complete" && (
             <div className="complete-wrapper">
-              <h2>Quiz Complete</h2>
-              <p>Thanks for playing! Here are the final standings.</p>
+              <h2>{quizInterrupted ? "Quiz Stopped" : "Quiz Complete"}</h2>
+              <p>
+                {quizInterrupted 
+                  ? "The quiz was stopped by the host. Here are the scores at the time of stopping." 
+                  : "Thanks for playing! Here are the final standings."}
+              </p>
               <ol>
                 {sortedScoreboard.map((entry) => (
                   <li key={entry.userId}>
                     <span>{entry.name}</span>
-                    <span>{entry.score}</span>
+                    <span>{entry.score.toFixed(2)}</span>
                   </li>
                 ))}
               </ol>

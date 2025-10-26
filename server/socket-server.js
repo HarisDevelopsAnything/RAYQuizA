@@ -56,9 +56,11 @@ const clearTimers = (lobby) => {
   }
 };
 
-const endQuiz = async (io, quizCode, lobby) => {
+const endQuiz = async (io, quizCode, lobby, reason = "completed") => {
   clearTimers(lobby);
   lobby.started = false;
+  const wasInterrupted = reason === "interrupted";
+  const finalQuestionIndex = lobby.currentQuestionIndex;
   lobby.currentQuestionIndex = -1;
   lobby.questionEndsAt = null;
   lobby.answers.clear();
@@ -68,6 +70,8 @@ const endQuiz = async (io, quizCode, lobby) => {
   io.to(quizCode).emit("quiz-ended", {
     quizCode,
     scoreboard,
+    interrupted: wasInterrupted,
+    reason: wasInterrupted ? "Quiz was stopped by the host" : "Quiz completed",
   });
 
   emitScoreboard(io, quizCode, lobby);
@@ -103,11 +107,14 @@ const endQuiz = async (io, quizCode, lobby) => {
       participants,
       completedAt: new Date(),
       totalParticipants: participants.length,
+      status: wasInterrupted ? "interrupted" : "completed",
+      questionsCompleted: wasInterrupted ? finalQuestionIndex : (lobby.quiz.questions?.length || 0),
+      totalQuestions: lobby.quiz.questions?.length || 0,
     };
 
     console.log("Saving quiz history:", JSON.stringify(quizHistoryEntry, null, 2));
     await db.collection("QuizHistory").insertOne(quizHistoryEntry);
-    console.log("Quiz history saved successfully");
+    console.log(`Quiz history saved successfully (${wasInterrupted ? 'interrupted' : 'completed'})`);
   } catch (error) {
     console.error("Failed to save quiz history:", error);
   }
@@ -285,6 +292,8 @@ const getOrCreateLobby = async (quizCode) => {
     scoreboard: new Map(),
     answers: new Map(),
     hostSocketId: null,
+    hostEmail: null, // Track the actual host's email
+    creatorEmail: quiz.createdByEmail || null, // Quiz creator's email
     started: false,
     currentQuestionIndex: -1,
     questionEndsAt: null,
@@ -368,15 +377,67 @@ const setupRealtime = (io) => {
       const participantName = player?.name || `Player-${socket.id.slice(-4)}`;
       const participantEmail = player?.email || null;
       const hostRequested = Boolean(player?.isHost);
-      let isHost = hostRequested;
+      const supervisorMode = Boolean(player?.supervisorMode); // Host supervising without playing
+      
+      let isHost = false;
+      let canBeHost = false;
 
-      if (!lobby.hostSocketId) {
-        isHost = true;
-      } else if (hostRequested && lobby.hostSocketId !== socket.id) {
-        socket.emit("host-rejected", { quizCode: normalizedCode });
-        isHost = false;
+      // Verify if this user can be host
+      if (hostRequested) {
+        // Check if user's email matches the quiz creator's email
+        if (participantEmail && lobby.creatorEmail && participantEmail === lobby.creatorEmail) {
+          canBeHost = true;
+        } else if (!lobby.creatorEmail) {
+          // Fallback: if no creator email stored, allow first requester (shouldn't happen normally)
+          canBeHost = true;
+        }
       }
 
+      // Assign host status
+      if (canBeHost && !lobby.hostSocketId) {
+        isHost = true;
+        lobby.hostEmail = participantEmail;
+      } else if (canBeHost && lobby.hostSocketId) {
+        // Host reconnecting - transfer host status
+        isHost = true;
+        lobby.hostSocketId = socket.id;
+        lobby.hostEmail = participantEmail;
+      } else if (hostRequested && !canBeHost) {
+        socket.emit("host-rejected", { 
+          quizCode: normalizedCode,
+          reason: "Only the quiz creator can be the host"
+        });
+        return; // Don't allow them to join if they requested host but aren't authorized
+      }
+
+      // If supervisor mode, host doesn't participate in the quiz
+      if (supervisorMode && isHost) {
+        // Host is only supervising - don't add to participants/scoreboard
+        lobby.hostSocketId = socket.id;
+        lobby.hostEmail = participantEmail;
+        
+        socket.join(normalizedCode);
+        socket.data.quizCode = normalizedCode;
+        socket.data.isSupervisor = true;
+
+        socket.emit("quiz-data", {
+          quizCode: normalizedCode,
+          title: lobby.quiz.title,
+          description: lobby.quiz.description || "",
+          totalQuestions: Array.isArray(lobby.quiz.questions) ? lobby.quiz.questions.length : 0,
+          supervisorMode: true,
+        });
+
+        socket.emit("host-confirmed", { quizCode: normalizedCode });
+        
+        broadcastLobby(io, normalizedCode, lobby);
+        emitScoreboard(io, normalizedCode, lobby);
+        
+        console.log(`Host ${participantName} joined as supervisor for quiz ${normalizedCode}`);
+        return;
+      }
+
+      // Regular participant (including host if they choose to play)
       const participant = {
         socketId: socket.id,
         userId: playerId,
@@ -389,8 +450,10 @@ const setupRealtime = (io) => {
       lobby.participants.set(socket.id, participant);
       if (isHost) {
         lobby.hostSocketId = socket.id;
+        lobby.hostEmail = participantEmail;
       }
 
+      // Add to scoreboard
       if (!lobby.scoreboard.has(playerId)) {
         lobby.scoreboard.set(playerId, {
           userId: playerId,
@@ -418,6 +481,10 @@ const setupRealtime = (io) => {
         description: lobby.quiz.description || "",
         totalQuestions: Array.isArray(lobby.quiz.questions) ? lobby.quiz.questions.length : 0,
       });
+
+      if (isHost) {
+        socket.emit("host-confirmed", { quizCode: normalizedCode });
+      }
 
       broadcastLobby(io, normalizedCode, lobby);
       emitScoreboard(io, normalizedCode, lobby);
@@ -489,6 +556,26 @@ const setupRealtime = (io) => {
       }
 
       finalizeQuestion(io, quizCode, lobby);
+    });
+
+    socket.on("stop-quiz", () => {
+      const quizCode = socket.data.quizCode;
+      if (!quizCode) {
+        return;
+      }
+      const lobby = lobbies.get(quizCode);
+      if (!lobby || lobby.hostSocketId !== socket.id) {
+        console.log("Stop quiz rejected: not host");
+        return;
+      }
+
+      if (!lobby.started) {
+        console.log("Stop quiz rejected: quiz not started");
+        return;
+      }
+
+      console.log(`Host is stopping quiz ${quizCode}`);
+      endQuiz(io, quizCode, lobby, "interrupted");
     });
 
     socket.on("submit-answer", ({ quizCode, questionIndex, answer }) => {

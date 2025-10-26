@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { useTheme } from "next-themes";
 
@@ -112,6 +112,7 @@ export const UserPreferencesProvider: React.FC<
     useState<UserPreferences>(defaultPreferences);
   const [loading, setLoading] = useState(false);
   const { setTheme, resolvedTheme, theme } = useTheme();
+  const lastAppliedThemeRef = useRef<string | null>(null);
 
   const updatePreference = (
     section: keyof UserPreferences,
@@ -348,8 +349,15 @@ export const UserPreferencesProvider: React.FC<
   // Apply theme preference on load and when preferences change
   // Only sync theme when defaultTheme is explicitly set (not on every preference change)
   useEffect(() => {
-    console.log("Applying theme:", preferences.appearance.defaultTheme);
     const desired = preferences.appearance.defaultTheme;
+    
+    // Skip if we've already applied this theme
+    if (lastAppliedThemeRef.current === desired) {
+      console.log("[ThemeEffect] Theme already applied:", desired, "- skipping");
+      return;
+    }
+    
+    console.log("Applying theme:", desired, "previous:", lastAppliedThemeRef.current);
     console.log(
       "[ThemeEffect] resolvedTheme:",
       resolvedTheme,
@@ -358,14 +366,12 @@ export const UserPreferencesProvider: React.FC<
       "desired:",
       desired
     );
-    // Apply the desired theme directly
-    if (desired === "system") {
-      console.log("[ThemeEffect] setting theme to system");
-      setTheme("system");
-    } else if (desired === "light" || desired === "dark") {
-      console.log("[ThemeEffect] setting theme to", desired);
-      setTheme(desired);
-    }
+    
+    // Apply the desired theme
+    setTheme(desired);
+    lastAppliedThemeRef.current = desired;
+    console.log("[ThemeEffect] Theme set to:", desired);
+    
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preferences.appearance.defaultTheme]); // Only depend on defaultTheme to avoid infinite loops
 

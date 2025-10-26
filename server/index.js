@@ -383,4 +383,62 @@ app.delete("/api/user-preferences/:userId", async (req, res) => {
   }
 });
 
+// ✅ Get quiz history for a user (quizzes they created)
+app.get("/api/quiz-history/created/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const db = await getDb();
+    
+    const history = await db.collection("QuizHistory")
+      .find({ creatorId: userId })
+      .sort({ completedAt: -1 })
+      .toArray();
+    
+    res.json({ history });
+  } catch (err) {
+    console.error("Error fetching created quiz history:", err);
+    res.status(500).json({ error: "Failed to fetch quiz history" });
+  }
+});
+
+// ✅ Get quiz history for a user (quizzes they participated in)
+app.get("/api/quiz-history/participated/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const db = await getDb();
+    
+    const history = await db.collection("QuizHistory")
+      .find({ "participants.userId": userId })
+      .sort({ completedAt: -1 })
+      .toArray();
+    
+    res.json({ history });
+  } catch (err) {
+    console.error("Error fetching participated quiz history:", err);
+    res.status(500).json({ error: "Failed to fetch quiz history" });
+  }
+});
+
+// ✅ Get specific quiz history details
+app.get("/api/quiz-history/:historyId", async (req, res) => {
+  try {
+    const { historyId } = req.params;
+    const db = await getDb();
+    const { ObjectId } = await import('mongodb');
+    
+    const history = await db.collection("QuizHistory").findOne({ 
+      _id: new ObjectId(historyId) 
+    });
+    
+    if (!history) {
+      return res.status(404).json({ error: "Quiz history not found" });
+    }
+    
+    res.json({ history });
+  } catch (err) {
+    console.error("Error fetching quiz history details:", err);
+    res.status(500).json({ error: "Failed to fetch quiz history details" });
+  }
+});
+
 httpServer.listen(port, () => console.log(`Server running on port ${port}`));

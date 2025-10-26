@@ -56,19 +56,55 @@ const clearTimers = (lobby) => {
   }
 };
 
-const endQuiz = (io, quizCode, lobby) => {
+const endQuiz = async (io, quizCode, lobby) => {
   clearTimers(lobby);
   lobby.started = false;
   lobby.currentQuestionIndex = -1;
   lobby.questionEndsAt = null;
   lobby.answers.clear();
 
+  const scoreboard = Array.from(lobby.scoreboard.values());
+
   io.to(quizCode).emit("quiz-ended", {
     quizCode,
-    scoreboard: Array.from(lobby.scoreboard.values()),
+    scoreboard,
   });
 
   emitScoreboard(io, quizCode, lobby);
+
+  // Save quiz history to database
+  try {
+    const db = await getDb();
+    const participants = scoreboard.map(entry => ({
+      userId: entry.userId,
+      name: entry.name,
+      score: entry.score,
+    }));
+
+    // Determine host user ID
+    let hostUserId = null;
+    for (const participant of lobby.participants.values()) {
+      if (participant.isHost) {
+        hostUserId = participant.userId;
+        break;
+      }
+    }
+
+    const quizHistoryEntry = {
+      quizCode,
+      quizTitle: lobby.quiz.title || "Untitled Quiz",
+      quizId: lobby.quiz._id || null,
+      creatorId: lobby.quiz.createdBy || hostUserId,
+      hostUserId,
+      participants,
+      completedAt: new Date(),
+      totalParticipants: participants.length,
+    };
+
+    await db.collection("QuizHistory").insertOne(quizHistoryEntry);
+  } catch (error) {
+    console.error("Failed to save quiz history:", error);
+  }
 };
 
 const cancelQuiz = (io, quizCode, lobby, reason) => {

@@ -30,7 +30,7 @@ const Sidebar = ({ setCurrentPage, onLogout }: Props) => {
         justifyContent={"space-evenly"}
       >
         <VStack width="100%" align="stretch" padding="0px" margin="0">
-          {["Quizzes", "Create Quiz", "Join using code"].map((label, idx) => (
+          {["Quizzes", "Create Quiz", "Join using code", "Quiz History"].map((label, idx) => (
             <Button
               right={0}
               margin="0px"
@@ -52,7 +52,11 @@ const Sidebar = ({ setCurrentPage, onLogout }: Props) => {
                 e.currentTarget.style.backgroundColor = accentColor;
                 e.currentTarget.style.color = "white";
                 // add navigation here
-                setCurrentPage(label);
+                if (label === "Quiz History") {
+                  navigate("/quiz-history");
+                } else {
+                  setCurrentPage(label);
+                }
               }}
               // make first item selected by default
               style={

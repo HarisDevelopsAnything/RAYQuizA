@@ -1,0 +1,22 @@
+/* Quiz History Page Styles */
+.quiz-history-container {
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.history-card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.history-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.participant-item {
+  transition: background-color 0.2s ease-in-out;
+}
+
+.participant-item:hover {
+  opacity: 0.9;
+}

@@ -111,8 +111,8 @@ export const UserPreferencesProvider: React.FC<
   const [preferences, setPreferences] =
     useState<UserPreferences>(defaultPreferences);
   const [loading, setLoading] = useState(false);
-  const { setTheme, resolvedTheme, theme } = useTheme();
-  const lastAppliedThemeRef = useRef<string | null>(null);
+  const { setTheme } = useTheme();
+  const hasInitializedThemeRef = useRef(false);
 
   const updatePreference = (
     section: keyof UserPreferences,
@@ -316,7 +316,8 @@ export const UserPreferencesProvider: React.FC<
 
       console.log("Theme toggled from", currentTheme, "to", newTheme);
 
-      // Don't call setTheme here - let the useEffect handle it to avoid double-toggling
+      // Directly apply the theme change
+      setTheme(newTheme);
 
       // Return updated preferences
       return {
@@ -346,34 +347,21 @@ export const UserPreferencesProvider: React.FC<
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty dependency array - only run once on mount
 
-  // Apply theme preference on load and when preferences change
-  // Only sync theme when defaultTheme is explicitly set (not on every preference change)
+  // Apply theme preference ONLY on initial load, not on every preference change
   useEffect(() => {
     const desired = preferences.appearance.defaultTheme;
     
-    // Skip if we've already applied this theme
-    if (lastAppliedThemeRef.current === desired) {
-      console.log("[ThemeEffect] Theme already applied:", desired, "- skipping");
-      return;
+    // Only apply theme from preferences on first load
+    if (!hasInitializedThemeRef.current) {
+      console.log("[ThemeEffect] Initial theme setup:", desired);
+      setTheme(desired);
+      hasInitializedThemeRef.current = true;
+    } else {
+      console.log("[ThemeEffect] Theme already initialized, skipping automatic sync");
     }
     
-    console.log("Applying theme:", desired, "previous:", lastAppliedThemeRef.current);
-    console.log(
-      "[ThemeEffect] resolvedTheme:",
-      resolvedTheme,
-      "theme:",
-      theme,
-      "desired:",
-      desired
-    );
-    
-    // Apply the desired theme
-    setTheme(desired);
-    lastAppliedThemeRef.current = desired;
-    console.log("[ThemeEffect] Theme set to:", desired);
-    
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preferences.appearance.defaultTheme]); // Only depend on defaultTheme to avoid infinite loops
+  }, []); // Empty array - only run once on mount
 
   // Apply accent color preference
   useEffect(() => {

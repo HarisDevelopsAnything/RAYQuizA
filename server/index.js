@@ -332,17 +332,29 @@ app.get("/api/quizzes/:quizId", async (req, res) => {
 app.delete("/api/quizzes/:quizId", async (req, res) => {
   try {
     const { quizId } = req.params;
-    const { userEmail } = req.body; // Email of user requesting deletion
-    
+    // Accept userEmail from either the body or query string for robustness
+    const userEmail = (req.body && req.body.userEmail) || req.query.userEmail;
+
+    console.log(`DELETE /api/quizzes/${quizId} requested by:`, userEmail || "(no email provided)");
+
     if (!userEmail) {
-      return res.status(400).json({ error: "User email is required" });
+      return res.status(400).json({ error: "User email is required (provide in body or ?userEmail=...)" });
     }
 
     const db = await getDb();
     const { ObjectId } = require("mongodb");
-    
+
+    // Validate quizId
+    let objectId;
+    try {
+      objectId = new ObjectId(quizId);
+    } catch (e) {
+      console.error("Invalid quizId provided to delete route:", quizId);
+      return res.status(400).json({ error: "Invalid quiz ID" });
+    }
+
     // First, check if the quiz exists and if the user is the creator
-    const quiz = await db.collection("Quizzes").findOne({ _id: new ObjectId(quizId) });
+    const quiz = await db.collection("Quizzes").findOne({ _id: objectId });
     
     if (!quiz) {
       return res.status(404).json({ error: "Quiz not found" });
@@ -354,9 +366,10 @@ app.delete("/api/quizzes/:quizId", async (req, res) => {
     }
     
     // Delete the quiz
-    const result = await db.collection("Quizzes").deleteOne({ _id: new ObjectId(quizId) });
-    
+    const result = await db.collection("Quizzes").deleteOne({ _id: objectId });
+
     if (result.deletedCount === 0) {
+      console.warn("Delete attempted but no document deleted for quizId:", quizId);
       return res.status(404).json({ error: "Quiz not found" });
     }
     

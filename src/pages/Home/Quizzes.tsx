@@ -144,7 +144,14 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
       const userEmail = user.email;
 
       const baseURL = "https://rayquiza-backend.onrender.com";
-      const response = await fetch(`${baseURL}/api/quizzes/${quizToDelete._id}`, {
+      // Provide userEmail in query string as a fallback (some proxies or setups
+      // may strip bodies from DELETE requests). We still include the JSON body
+      // for servers that expect it.
+      const url = `${baseURL}/api/quizzes/${quizToDelete._id}?userEmail=${encodeURIComponent(
+        userEmail
+      )}`;
+
+      const response = await fetch(url, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

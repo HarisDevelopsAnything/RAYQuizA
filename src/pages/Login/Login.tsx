@@ -184,19 +184,23 @@ const Login = () => {
       gap="0"
       padding="0px"
       margin="0px"
+      flexDirection={{ base: "column", md: "row" }}
     >
       {/* Left Side - Branding */}
       <Container
         backgroundColor={"black"}
         color="white"
-        width="50%"
-        height="100%"
+        width={{ base: "100%", md: "50%" }}
+        height={{ base: "auto", md: "100%" }}
+        minH={{ base: "30vh", md: "100%" }}
         margin="0px"
         centerContent={true}
         justifyContent={"center"}
+        py={{ base: "8", md: "0" }}
+        display={{ base: "none", sm: "flex" }}
       >
-        <Heading fontSize="40px">Welcome to RAYQuizA!</Heading>
-        <Text>A place for</Text>
+        <Heading fontSize={{ base: "2xl", md: "40px" }} textAlign="center" px={4}>Welcome to RAYQuizA!</Heading>
+        <Text fontSize={{ base: "md", md: "lg" }}>A place for</Text>
         <Typewriter
           options={{
             wrapperClassName: "typewriter",
@@ -225,16 +229,17 @@ const Login = () => {
       {/* Right Side - Sign In/Sign Up Form */}
       <Container
         backgroundColor={"teal.500"}
-        width="50%"
-        height="100%"
+        width={{ base: "100%", md: "50%" }}
+        height={{ base: "100vh", md: "100%" }}
         margin="0"
         display="flex"
         alignItems="center"
         justifyContent="center"
+        px={{ base: "4", md: "8" }}
       >
         <Box
           bg="white"
-          p={8}
+          p={{ base: 6, md: 8 }}
           borderRadius="xl"
           boxShadow="2xl"
           width="full"
@@ -353,6 +358,14 @@ const Login = () => {
             </form>
 
             <Separator />
+
+            {/* Google Login Button for Mobile */}
+            <Box display={{ base: "block", sm: "none" }}>
+              <Text fontSize="sm" color="gray.600" textAlign="center" mb={4}>
+                Or continue with Google
+              </Text>
+              <LoginButton />
+            </Box>
 
             <Box textAlign="center">
               <Text color="gray.600" fontSize="sm">

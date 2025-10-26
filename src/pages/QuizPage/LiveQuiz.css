@@ -122,6 +122,73 @@
   border-radius: 10px;
 }
 
+/* Supervisor Review Styles */
+.supervisor-review {
+  background: rgba(15, 23, 42, 0.85);
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.supervisor-review h2 {
+  margin: 0 0 1.5rem 0;
+  color: #a78bfa;
+  text-align: center;
+  font-size: 1.8rem;
+}
+
+.supervisor-results {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.supervisor-results h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.supervisor-results ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.supervisor-results li {
+  background: rgba(30, 41, 59, 0.7);
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.05rem;
+  transition: transform 0.2s ease;
+}
+
+.supervisor-results li:hover {
+  transform: translateX(4px);
+}
+
+.correct-answers li {
+  border-left: 3px solid #4CAF50;
+}
+
+.incorrect-answers li {
+  border-left: 3px solid #F44336;
+}
+
+@media (max-width: 768px) {
+  .supervisor-results {
+    grid-template-columns: 1fr;
+  }
+}
+
 .complete-wrapper ol {
   list-style: decimal;
   padding-left: 1.5rem;
@@ -167,6 +234,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
+  position: relative;
 }
 
 .scoreboard-list li {
@@ -176,13 +244,49 @@
   border-radius: 12px;
   background: rgba(30, 41, 59, 0.55);
   border: 1px solid transparent;
-  transition: transform 0.2s ease;
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
 }
 
 .scoreboard-list li.me {
   border-color: rgba(16, 185, 129, 0.6);
   transform: translateX(4px);
   font-weight: 600;
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.scoreboard-list li.top-player {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0.2));
+  border-color: rgba(251, 191, 36, 0.5);
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+  animation: topPlayerGlow 2s ease-in-out;
+}
+
+.scoreboard-list li.position-changed {
+  animation: scoreUpdate 0.6s ease-out;
+}
+
+@keyframes topPlayerGlow {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+  }
+  50% {
+    box-shadow: 0 8px 24px rgba(251, 191, 36, 0.6);
+    transform: scale(1.05);
+  }
+}
+
+@keyframes scoreUpdate {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+    background: rgba(94, 234, 212, 0.4);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 @media (max-width: 1024px) {

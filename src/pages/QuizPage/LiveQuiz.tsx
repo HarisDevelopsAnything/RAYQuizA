@@ -192,6 +192,8 @@ const LiveQuiz = () => {
   const [supervisorMode, setSupervisorMode] = useState(false);
   const [quizInterrupted, setQuizInterrupted] = useState(false);
   const [acknowledgedWarning, setAcknowledgedWarning] = useState(false);
+  const [previousScoreboard, setPreviousScoreboard] = useState<ScoreEntry[]>([]);
+  const [animatingScores, setAnimatingScores] = useState(false);
 
   useEffect(() => {
     if (!quizCode) {
@@ -382,7 +384,17 @@ const LiveQuiz = () => {
         summary: QuestionSummary[];
       }) => {
         setPhase("review");
+        
+        // Store previous scoreboard for animation
+        setPreviousScoreboard(scoreboard);
+        
+        // Update scoreboard with animation
         setScoreboard(entries);
+        setAnimatingScores(true);
+        
+        // Reset animation flag after animation completes
+        setTimeout(() => setAnimatingScores(false), 600);
+        
         setLastSummary(summary);
         setQuestionEndsAt(null);
         setTimeRemaining(0);
@@ -778,61 +790,116 @@ const LiveQuiz = () => {
 
           {viewingReview && (
             <div className="review-wrapper">
-              <QuizOps
-                question={currentQuestion.text}
-                type={currentQuestion.answerType}
-                options={currentQuestion.options}
-                image={currentQuestion.imageUrl || ""}
-                selectedAnswers={playerSummary?.selected || []}
-                showFeedback={true}
-                isCorrect={Boolean(playerSummary?.isCorrect)}
-                correctAnswers={answerFeedback?.correctAnswers || []}
-                disableInteractions={true}
-              />
-              <div className="review-panel">
-                <h3>Round Summary</h3>
-                <p>
-                  {playerSummary
-                    ? playerSummary.isCorrect
-                      ? `Nice! You earned ${playerSummary.gained.toFixed(2)} point${
-                          playerSummary.gained === 1 ? "" : "s"
-                        }${playerSummary.timeBonus ? ` (${playerSummary.timeBonus}x speed bonus!)` : ""}.`
-                      : playerSummary.gained < 0
-                      ? `Tough luck. ${Math.abs(
-                          playerSummary.gained
-                        )} point penalty.`
-                      : "No points this round, get ready for the next one!"
-                    : "You joined mid-question. Scores resume next round."}
-                </p>
-                {playerSummary?.timeBonus && playerSummary.isCorrect && (
-                  <p className="time-bonus-info" style={{ fontSize: "0.9em", color: "#4CAF50", marginTop: "0.5rem" }}>
-                    🚀 Speed Bonus: 
-                    {playerSummary.timeBonus === 2.0 && " ⚡ Lightning Fast! (within 10%)"}
-                    {playerSummary.timeBonus === 1.75 && " 🔥 Super Quick! (within 25%)"}
-                    {playerSummary.timeBonus === 1.5 && " ⭐ Nice Speed! (within 50%)"}
-                    {playerSummary.timeBonus === 1.0 && " ✓ Good Job!"}
-                  </p>
-                )}
-                <ul>
-                  {lastSummary.map((entry) => (
-                    <li key={entry.userId}>
-                      <span>
-                        {entry.name}
-                        {entry.timeBonus && entry.timeBonus > 1 && (
-                          <span style={{ fontSize: "0.8em", color: "#FF9800", marginLeft: "0.5rem" }}>
-                            {entry.timeBonus === 2.0 && "⚡"}
-                            {entry.timeBonus === 1.75 && "🔥"}
-                            {entry.timeBonus === 1.5 && "⭐"}
+              {supervisorMode ? (
+                // Supervisor view: Only show who got it right/wrong
+                <div className="supervisor-review">
+                  <h2>Question {questionIndex + 1} Results</h2>
+                  <div className="supervisor-results">
+                    <div className="correct-answers">
+                      <h3 style={{ color: "#4CAF50" }}>✓ Correct ({lastSummary.filter(s => s.isCorrect).length})</h3>
+                      <ul>
+                        {lastSummary
+                          .filter(s => s.isCorrect)
+                          .map((entry) => (
+                            <li key={entry.userId} style={{ color: "#4CAF50" }}>
+                              {entry.name} 
+                              {entry.timeBonus && entry.timeBonus > 1 && (
+                                <span style={{ marginLeft: "0.5rem" }}>
+                                  {entry.timeBonus === 2.0 && "⚡"}
+                                  {entry.timeBonus === 1.75 && "🔥"}
+                                  {entry.timeBonus === 1.5 && "⭐"}
+                                </span>
+                              )}
+                              <span style={{ float: "right", fontWeight: "bold" }}>
+                                +{entry.gained.toFixed(2)}
+                              </span>
+                            </li>
+                          ))}
+                      </ul>
+                      {lastSummary.filter(s => s.isCorrect).length === 0 && (
+                        <p style={{ fontStyle: "italic", color: "#999" }}>No one got it right</p>
+                      )}
+                    </div>
+                    <div className="incorrect-answers">
+                      <h3 style={{ color: "#F44336" }}>✗ Incorrect ({lastSummary.filter(s => !s.isCorrect).length})</h3>
+                      <ul>
+                        {lastSummary
+                          .filter(s => !s.isCorrect)
+                          .map((entry) => (
+                            <li key={entry.userId} style={{ color: "#F44336" }}>
+                              {entry.name}
+                              <span style={{ float: "right", fontWeight: "bold" }}>
+                                {entry.gained.toFixed(2)}
+                              </span>
+                            </li>
+                          ))}
+                      </ul>
+                      {lastSummary.filter(s => !s.isCorrect).length === 0 && (
+                        <p style={{ fontStyle: "italic", color: "#999" }}>Everyone got it right!</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // Normal player view: Show question with feedback
+                <>
+                  <QuizOps
+                    question={currentQuestion.text}
+                    type={currentQuestion.answerType}
+                    options={currentQuestion.options}
+                    image={currentQuestion.imageUrl || ""}
+                    selectedAnswers={playerSummary?.selected || []}
+                    showFeedback={true}
+                    isCorrect={Boolean(playerSummary?.isCorrect)}
+                    correctAnswers={answerFeedback?.correctAnswers || []}
+                    disableInteractions={true}
+                  />
+                  <div className="review-panel">
+                    <h3>Round Summary</h3>
+                    <p>
+                      {playerSummary
+                        ? playerSummary.isCorrect
+                          ? `Nice! You earned ${playerSummary.gained.toFixed(2)} point${
+                              playerSummary.gained === 1 ? "" : "s"
+                            }${playerSummary.timeBonus ? ` (${playerSummary.timeBonus}x speed bonus!)` : ""}.`
+                          : playerSummary.gained < 0
+                          ? `Tough luck. ${Math.abs(
+                              playerSummary.gained
+                            )} point penalty.`
+                          : "No points this round, get ready for the next one!"
+                        : "You joined mid-question. Scores resume next round."}
+                    </p>
+                    {playerSummary?.timeBonus && playerSummary.isCorrect && (
+                      <p className="time-bonus-info" style={{ fontSize: "0.9em", color: "#4CAF50", marginTop: "0.5rem" }}>
+                        🚀 Speed Bonus: 
+                        {playerSummary.timeBonus === 2.0 && " ⚡ Lightning Fast! (within 10%)"}
+                        {playerSummary.timeBonus === 1.75 && " 🔥 Super Quick! (within 25%)"}
+                        {playerSummary.timeBonus === 1.5 && " ⭐ Nice Speed! (within 50%)"}
+                        {playerSummary.timeBonus === 1.0 && " ✓ Good Job!"}
+                      </p>
+                    )}
+                    <ul>
+                      {lastSummary.map((entry) => (
+                        <li key={entry.userId}>
+                          <span>
+                            {entry.name}
+                            {entry.timeBonus && entry.timeBonus > 1 && (
+                              <span style={{ fontSize: "0.8em", color: "#FF9800", marginLeft: "0.5rem" }}>
+                                {entry.timeBonus === 2.0 && "⚡"}
+                                {entry.timeBonus === 1.75 && "🔥"}
+                                {entry.timeBonus === 1.5 && "⭐"}
+                              </span>
+                            )}
                           </span>
-                        )}
-                      </span>
-                      <span>
-                        {entry.gained > 0 ? `+${entry.gained.toFixed(2)}` : entry.gained.toFixed(2)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                          <span>
+                            {entry.gained > 0 ? `+${entry.gained.toFixed(2)}` : entry.gained.toFixed(2)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -875,19 +942,29 @@ const LiveQuiz = () => {
           <div className="live-card">
             <h3>Scoreboard</h3>
             <ol className="scoreboard-list">
-              {sortedScoreboard.map((entry, index) => (
-                <li
-                  key={entry.userId}
-                  className={
-                    entry.userId === playerIdRef.current ? "me" : undefined
-                  }
-                >
-                  <span>
-                    {index + 1}. {entry.name}
-                  </span>
-                  <span>{entry.score}</span>
-                </li>
-              ))}
+              {sortedScoreboard.map((entry, index) => {
+                // Check if position changed
+                const previousIndex = previousScoreboard.findIndex(p => p.userId === entry.userId);
+                const positionChanged = animatingScores && previousIndex !== -1 && previousIndex !== index;
+                const isTopPlayer = index === 0 && sortedScoreboard.length > 1;
+                
+                return (
+                  <li
+                    key={entry.userId}
+                    className={`
+                      ${entry.userId === playerIdRef.current ? "me" : ""}
+                      ${isTopPlayer ? "top-player" : ""}
+                      ${positionChanged ? "position-changed" : ""}
+                    `.trim()}
+                  >
+                    <span>
+                      {index + 1}. {entry.name}
+                      {isTopPlayer && " 👑"}
+                    </span>
+                    <span>{entry.score.toFixed(2)}</span>
+                  </li>
+                );
+              })}
               {sortedScoreboard.length === 0 && (
                 <p className="muted">
                   Scores will appear after the first question.

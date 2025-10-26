@@ -1,6 +1,6 @@
 import NavBar from "@/components/general/NavBar/NavBar";
 import Sidebar from "@/pages/Home/Sidebar/Sidebar";
-import { Box, Flex, Show, useBreakpointValue } from "@chakra-ui/react";
+import { Box, Flex, Show, useBreakpointValue, Drawer } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Home.css";
@@ -37,12 +37,16 @@ const Home = () => {
   const isMobile = useBreakpointValue({ base: true, lg: false });
   const [isQuizPopupShowing, setShowingQuizPopup] = useState(false);
   const [isQuizDetailsShowing, setShowingQuizDetails] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState("Quizzes");
   const toggleQuizPopup = () => {
     setShowingQuizPopup(!isQuizPopupShowing);
   };
   const toggleQuizDetailsPopup = () => {
     setShowingQuizDetails(!isQuizDetailsShowing);
+  };
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
   };
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz>({
     _id: "",
@@ -110,7 +114,13 @@ const Home = () => {
   return (
     <Box>
       <Box position="fixed" top="0" left="0" right="0" zIndex={1000}>
-        <NavBar username={user?.name || ""} profilePic={user?.picture || ""} onLogout={handleLogout} />
+        <NavBar 
+          username={user?.name || ""} 
+          profilePic={user?.picture || ""} 
+          onLogout={handleLogout}
+          onMenuClick={toggleMobileMenu}
+          showMenuButton={isMobile}
+        />
       </Box>
       <Flex>
         <Show when={!isMobile}>
@@ -127,6 +137,35 @@ const Home = () => {
             <Sidebar setCurrentPage={setCurrentPage} onLogout={handleLogout} />
           </Box>
         </Show>
+        
+        {/* Mobile Drawer Menu */}
+        <Drawer.Root
+          open={isMobileMenuOpen}
+          onOpenChange={(e) => setIsMobileMenuOpen(e.open)}
+          placement="start"
+          size="xs"
+        >
+          <Drawer.Backdrop />
+          <Drawer.Content>
+            <Drawer.Header>
+              <Drawer.Title>Menu</Drawer.Title>
+              <Drawer.CloseTrigger />
+            </Drawer.Header>
+            <Drawer.Body p={0}>
+              <Sidebar 
+                setCurrentPage={(page) => {
+                  setCurrentPage(page);
+                  setIsMobileMenuOpen(false);
+                }} 
+                onLogout={() => {
+                  setIsMobileMenuOpen(false);
+                  handleLogout();
+                }} 
+              />
+            </Drawer.Body>
+          </Drawer.Content>
+        </Drawer.Root>
+
         <Box
           ml={isMobile ? "0" : "20vw"}
           mt="60px"

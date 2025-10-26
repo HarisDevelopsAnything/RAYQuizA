@@ -32,32 +32,33 @@ const Landing = () => {
         transition="backgrounds 0.3s ease"
         fluid
         h="100vh"
-        padding="0"
+        padding={{ base: "4", md: "0" }}
         centerContent={true}
         //backgroundImage="url('https://cdn.wallpapersafari.com/8/55/drBQil.jpg')"
         backgroundRepeat="no-repeat"
         backgroundSize={"cover"}
       >
-        <Heading size="6xl">
+        <Heading size={{ base: "3xl", md: "5xl", lg: "6xl" }} textAlign="center" px={{ base: "4", md: "0" }}>
           <Highlight query="Quiz" styles={{ color: "teal.400" }}>
             Welcome to RAYQuizA!
           </Highlight>
         </Heading>
-        <Text fontSize="3xl" color="fg.muted" fontWeight={"bold"}>
+        <Text fontSize={{ base: "lg", md: "2xl", lg: "3xl" }} color="fg.muted" fontWeight={"bold"} textAlign="center" px={{ base: "4", md: "0" }}>
           Realtime Assessment Yielding Quiz App
         </Text>
         <Button
           colorPalette={"green"}
           variant={"subtle"}
-          size="2xl"
+          size={{ base: "lg", md: "xl", lg: "2xl" }}
           transition="0.3s ease all"
           _hover={{ transform: "scale(1.1)" }}
           onClick={() => navigate("/guest-join")}
+          mt={4}
         >
           Let's get quizzing! <FaArrowRight />
         </Button>
-        or... maybe you want to know more?
-        <SimpleGrid columns={2} minChildWidth={"sm"}>
+        <Text mt={2} fontSize={{ base: "sm", md: "md" }}>or... maybe you want to know more?</Text>
+        <SimpleGrid columns={{ base: 1, md: 2 }} minChildWidth={"sm"} gap={4} mt={4} w="full" px={{ base: "4", md: "0" }}>
           <Interesting
             title="What is with the name?"
             desc="The site was named after Rayquaza, the legendary Pokemon. Reason? Because we love Pokemon! And it was a catchy name."

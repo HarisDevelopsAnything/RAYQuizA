@@ -9,6 +9,7 @@
     -webkit-backdrop-filter: blur(20px);
     border: none;
 }
+
 .nav-avatar {
     height: 80%;
     aspect-ratio: 1/1;
@@ -16,4 +17,17 @@
     border: 5px solid white;
     align-content: center;
     text-align: center;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .nav-avatar {
+        height: 70%;
+        border: 3px solid white;
+    }
+    
+    .sticky-topbar {
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(15px);
+    }
 }

@@ -1,7 +1,7 @@
 import { getDb } from "./connect.cjs";
 
 const lobbies = new Map();
-const REVIEW_DELAY_MS = Number(process.env.QUIZ_REVIEW_DELAY_MS || 5000);
+const REVIEW_DELAY_MS = Number(process.env.QUIZ_REVIEW_DELAY_MS || 8000); // 8 seconds: 3s for scoreboard animation + 5s review
 const CLEANUP_INTERVAL_MS = 60 * 1000;
 const LOBBY_IDLE_MS = 60 * 60 * 1000;
 

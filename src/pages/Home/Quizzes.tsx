@@ -243,8 +243,8 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
                 quizDetails(true);
               }}
               onClickPresent={() => {
-                // Navigate to presenter mode
-                navigate(`/quiz/presenter/${quiz._id}`);
+                // Navigate to presenter mode using quiz code
+                navigate(`/quiz/presenter/${quiz.code}`);
               }}
               onClickDelete={() => handleDeleteClick(safeQuiz)}
             />

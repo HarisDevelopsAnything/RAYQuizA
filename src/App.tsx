@@ -34,7 +34,7 @@ const App = () => {
           <Route path="/quiz-history" element={<QuizHistory />}></Route>
           <Route path="/quiz/:quizId" element={<QuizPage />}></Route>
           <Route path="/quiz/live/:quizCode" element={<LiveQuiz />}></Route>
-          <Route path="/quiz/presenter/:quizId" element={<QuizPresenter />}></Route>
+          <Route path="/quiz/presenter/:quizCode" element={<QuizPresenter />}></Route>
         </Routes>
       </BrowserRouter>
       <Toaster />

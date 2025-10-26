@@ -26,7 +26,7 @@ interface Quiz {
 }
 
 const QuizPresenter = () => {
-  const { quizId } = useParams<{ quizId: string }>();
+  const { quizCode } = useParams<{ quizCode: string }>();
   const navigate = useNavigate();
   const accentColor = useAccentColor();
 
@@ -41,12 +41,12 @@ const QuizPresenter = () => {
 
   useEffect(() => {
     fetchQuiz();
-  }, [quizId]);
+  }, [quizCode]);
 
   const fetchQuiz = async () => {
     try {
       const baseURL = "https://rayquiza-backend.onrender.com";
-      const response = await fetch(`${baseURL}/api/quizzes/${quizId}`);
+      const response = await fetch(`${baseURL}/api/quizzes/code/${quizCode}`);
       
       if (!response.ok) {
         throw new Error("Failed to fetch quiz");

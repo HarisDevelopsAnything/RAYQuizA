@@ -279,7 +279,7 @@ app.post("/api/quizzes", async (req, res) => {
   }
 });
 
-// ✅ Get Quiz by Code Route
+// ✅ Get Quiz by Code Route (must come before /:quizId to avoid conflict)
 app.get("/api/quizzes/code/:code", async (req, res) => {
   try {
     const { code } = req.params;
@@ -301,6 +301,12 @@ app.get("/api/quizzes/code/:code", async (req, res) => {
 app.get("/api/quizzes/:quizId", async (req, res) => {
   try {
     const { quizId } = req.params;
+    
+    // If it looks like a code (6 chars, alphanumeric), skip this route
+    if (quizId.length === 6 && /^[A-Z0-9]+$/i.test(quizId)) {
+      return res.status(400).json({ error: "Use /api/quizzes/code/:code for quiz codes" });
+    }
+    
     const db = await getDb();
     const { ObjectId } = require("mongodb");
     
@@ -317,7 +323,7 @@ app.get("/api/quizzes/:quizId", async (req, res) => {
     
     res.json(quiz);
   } catch (err) {
-    console.error(err);
+    console.error("Error in get quiz by ID:", err);
     res.status(500).json({ error: "Failed to fetch quiz" });
   }
 });

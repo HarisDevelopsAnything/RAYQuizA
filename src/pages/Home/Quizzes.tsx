@@ -7,10 +7,19 @@ import {
   Text,
   VStack,
   useBreakpointValue,
+  DialogRoot,
+  DialogContent,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
+  DialogActionTrigger,
+  Button,
+  DialogTitle,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAccentColor } from "@/contexts/UserPreferencesContext";
+import { toaster } from "@/components/ui/toaster";
 
 interface Props {
   quizPopup: (value: boolean) => void;
@@ -43,6 +52,8 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
   const isMobile = useBreakpointValue({ base: true, lg: false });
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [quizzesLoading, setQuizzesLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [quizToDelete, setQuizToDelete] = useState<Quiz | null>(null);
   const navigate = useNavigate();
   const accentColor = useAccentColor();
   useEffect(() => {
@@ -109,6 +120,69 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
 
     tryFetch();
   }, []);
+
+  const handleDeleteClick = (quiz: Quiz) => {
+    setQuizToDelete(quiz);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!quizToDelete) return;
+
+    try {
+      const userString = localStorage.getItem("user");
+      if (!userString) {
+        toaster.create({
+          title: "Error",
+          description: "You must be logged in to delete a quiz",
+          type: "error",
+        });
+        return;
+      }
+
+      const user = JSON.parse(userString);
+      const userEmail = user.email;
+
+      const baseURL = "https://rayquiza-backend.onrender.com";
+      const response = await fetch(`${baseURL}/api/quizzes/${quizToDelete._id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userEmail }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete quiz");
+      }
+
+      // Remove the quiz from the local state
+      setQuizzes((prev) => prev.filter((q) => q._id !== quizToDelete._id));
+
+      toaster.create({
+        title: "Quiz deleted",
+        description: `"${quizToDelete.title}" has been deleted successfully`,
+        type: "success",
+      });
+
+      setDeleteDialogOpen(false);
+      setQuizToDelete(null);
+    } catch (error) {
+      console.error("Error deleting quiz:", error);
+      toaster.create({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete quiz",
+        type: "error",
+      });
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setQuizToDelete(null);
+  };
+
   return (
     <>
       <Heading margin="3" size="5xl">
@@ -168,10 +242,35 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
                 setSelectedQuiz(safeQuiz);
                 quizDetails(true);
               }}
+              onClickDelete={() => handleDeleteClick(safeQuiz)}
             />
           );
         })}
       </SimpleGrid>
+
+      {/* Delete Confirmation Dialog */}
+      <DialogRoot open={deleteDialogOpen} onOpenChange={(e) => setDeleteDialogOpen(e.open)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Quiz</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            <Text>
+              Are you sure you want to delete "{quizToDelete?.title}"? This action cannot be undone.
+            </Text>
+          </DialogBody>
+          <DialogFooter>
+            <DialogActionTrigger asChild>
+              <Button variant="outline" onClick={handleDeleteCancel}>
+                Cancel
+              </Button>
+            </DialogActionTrigger>
+            <Button colorPalette="red" onClick={handleDeleteConfirm}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </DialogRoot>
     </>
   );
 };

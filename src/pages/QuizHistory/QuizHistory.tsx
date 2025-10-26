@@ -115,10 +115,10 @@ const QuizHistory = () => {
     const userScore = entry.participants.find(p => p.email === userEmail)?.score;
 
     return (
-      <Card.Root key={entry._id} width="100%" p={4} mb={4}>
+      <Card.Root key={entry._id} width="100%" p={4} mb={4} bg="bg.panel" borderWidth="1px">
         <Card.Body>
           <HStack justifyContent="space-between" mb={2}>
-            <Heading size="md">{entry.quizTitle}</Heading>
+            <Heading size="md" color="fg">{entry.quizTitle}</Heading>
             <HStack>
               {entry.status === "interrupted" && (
                 <Badge colorPalette="orange" variant="solid">
@@ -131,47 +131,65 @@ const QuizHistory = () => {
             </HStack>
           </HStack>
           
-          <Text fontSize="sm" color="gray.500" mb={3}>
+          <Text fontSize="sm" color="fg.muted" mb={3}>
             Completed: {formatDate(entry.completedAt)}
             {entry.status === "interrupted" && entry.questionsCompleted !== undefined && (
               <> • Stopped at question {entry.questionsCompleted} of {entry.totalQuestions}</>
             )}
           </Text>
 
-          <Text fontWeight="bold" mb={2}>
+          <Text fontWeight="bold" mb={2} color="fg">
             Participants ({entry.totalParticipants}):
           </Text>
 
           <VStack align="stretch" gap={2} maxH="200px" overflowY="auto">
-            {sortedParticipants.map((participant, index) => (
-              <HStack
-                key={participant.userId}
-                justifyContent="space-between"
-                p={2}
-                bg={participant.email === userEmail ? `${accentColor}.100` : "gray.50"}
-                borderRadius="md"
-              >
-                <HStack>
-                  <Badge colorPalette={index === 0 ? "yellow" : index === 1 ? "gray" : index === 2 ? "orange" : "blue"}>
-                    #{index + 1}
+            {sortedParticipants.map((participant, index) => {
+              const isCurrentUser = participant.email === userEmail;
+              return (
+                <HStack
+                  key={participant.userId}
+                  justifyContent="space-between"
+                  p={3}
+                  bg={isCurrentUser ? `${accentColor}.500` : "bg.subtle"}
+                  borderRadius="md"
+                  borderWidth="2px"
+                  borderColor={isCurrentUser ? `${accentColor}.600` : "border"}
+                >
+                  <HStack>
+                    <Badge 
+                      colorPalette={index === 0 ? "yellow" : index === 1 ? "gray" : index === 2 ? "orange" : "blue"}
+                      variant="solid"
+                    >
+                      #{index + 1}
+                    </Badge>
+                    <Text 
+                      fontWeight={isCurrentUser ? "bold" : "medium"} 
+                      color={isCurrentUser ? "white" : "fg"}
+                      fontSize="md"
+                    >
+                      {participant.name}
+                      {isCurrentUser && " (You)"}
+                      {!participant.email && " (Guest)"}
+                    </Text>
+                  </HStack>
+                  <Badge 
+                    colorPalette="green" 
+                    variant="solid"
+                    fontSize="md"
+                    px={3}
+                    py={1}
+                  >
+                    {participant.score.toFixed(2)} pts
                   </Badge>
-                  <Text fontWeight={participant.email === userEmail ? "bold" : "normal"}>
-                    {participant.name}
-                    {participant.email === userEmail && " (You)"}
-                    {!participant.email && " (Guest)"}
-                  </Text>
                 </HStack>
-                <Badge colorPalette="green" fontSize="md">
-                  {participant.score} pts
-                </Badge>
-              </HStack>
-            ))}
+              );
+            })}
           </VStack>
 
           {userScore !== undefined && (
-            <Box mt={3} p={2} bg={`${accentColor}.50`} borderRadius="md">
-              <Text fontWeight="bold" textAlign="center">
-                Your Score: {userScore} points
+            <Box mt={3} p={2} bg={`${accentColor}.100`} borderRadius="md" borderWidth="1px" borderColor={`${accentColor}.200`}>
+              <Text fontWeight="bold" textAlign="center" color="fg">
+                Your Score: {userScore.toFixed(2)} points
               </Text>
             </Box>
           )}

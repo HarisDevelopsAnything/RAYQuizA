@@ -297,6 +297,45 @@ app.get("/api/quizzes/code/:code", async (req, res) => {
   }
 });
 
+// ✅ Delete Quiz Route
+app.delete("/api/quizzes/:quizId", async (req, res) => {
+  try {
+    const { quizId } = req.params;
+    const { userEmail } = req.body; // Email of user requesting deletion
+    
+    if (!userEmail) {
+      return res.status(400).json({ error: "User email is required" });
+    }
+
+    const db = await getDb();
+    const { ObjectId } = require("mongodb");
+    
+    // First, check if the quiz exists and if the user is the creator
+    const quiz = await db.collection("Quizzes").findOne({ _id: new ObjectId(quizId) });
+    
+    if (!quiz) {
+      return res.status(404).json({ error: "Quiz not found" });
+    }
+    
+    // Verify the user is the creator
+    if (quiz.createdByEmail !== userEmail) {
+      return res.status(403).json({ error: "You can only delete quizzes you created" });
+    }
+    
+    // Delete the quiz
+    const result = await db.collection("Quizzes").deleteOne({ _id: new ObjectId(quizId) });
+    
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: "Quiz not found" });
+    }
+    
+    res.json({ message: "Quiz deleted successfully", quizId });
+  } catch (err) {
+    console.error("Error deleting quiz:", err);
+    res.status(500).json({ error: "Failed to delete quiz" });
+  }
+});
+
 // ✅ User Preferences Routes
 // Get user preferences
 app.get("/api/user-preferences/:userId", async (req, res) => {

@@ -1,6 +1,7 @@
 import { useColorMode } from "@/components/ui/color-mode";
 import { Button, ButtonGroup, Card, Center } from "@chakra-ui/react";
 import { useAccentColor } from "@/contexts/UserPreferencesContext";
+import { IoTrash } from "react-icons/io5";
 
 interface Props {
   name: string;
@@ -8,6 +9,7 @@ interface Props {
   duration: string;
   onClickTakeQuiz?: () => void;
   onClickViewDetails?: () => void;
+  onClickDelete?: () => void;
 }
 
 const QuizCard = ({
@@ -16,6 +18,7 @@ const QuizCard = ({
   duration,
   onClickTakeQuiz,
   onClickViewDetails,
+  onClickDelete,
 }: Props) => {
   const { colorMode } = useColorMode();
   const accentColor = useAccentColor();
@@ -54,7 +57,7 @@ const QuizCard = ({
             colorPalette={accentColor as any}
             onClick={onClickTakeQuiz}
             margin="0px"
-            width="50%"
+            width={onClickDelete ? "33.33%" : "50%"}
             borderRadius="0"
             borderBottomLeftRadius={"10px"}
           >
@@ -65,12 +68,25 @@ const QuizCard = ({
             colorPalette={accentColor as any}
             onClick={onClickViewDetails}
             margin="0px"
-            width="50%"
+            width={onClickDelete ? "33.33%" : "50%"}
             borderRadius={"0"}
-            borderBottomRightRadius={"10px"}
+            borderBottomRightRadius={onClickDelete ? "0" : "10px"}
           >
             View details
           </Button>
+          {onClickDelete && (
+            <Button
+              variant={"solid"}
+              colorPalette="red"
+              onClick={onClickDelete}
+              margin="0px"
+              width="33.33%"
+              borderRadius={"0"}
+              borderBottomRightRadius={"10px"}
+            >
+              <IoTrash /> Delete
+            </Button>
+          )}
         </ButtonGroup>
       </Card.Footer>
     </Card.Root>

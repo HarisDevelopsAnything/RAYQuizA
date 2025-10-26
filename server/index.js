@@ -328,7 +328,53 @@ app.get("/api/quizzes/:quizId", async (req, res) => {
   }
 });
 
-// ✅ Delete Quiz Route
+// ✅ Delete Quiz Route (by code)
+app.delete("/api/quizzes/code/:code", async (req, res) => {
+  try {
+    const { code } = req.params;
+    // Accept userEmail from either the body or query string for robustness
+    const userEmail = (req.body && req.body.userEmail) || req.query.userEmail;
+
+    console.log(`DELETE /api/quizzes/code/${code} requested by:`, userEmail || "(no email provided)");
+
+    if (!userEmail) {
+      return res.status(400).json({ error: "User email is required (provide in body or ?userEmail=...)" });
+    }
+
+    const db = await getDb();
+
+    // First, check if the quiz exists and if the user is the creator
+    const quiz = await db.collection("Quizzes").findOne({ code: code });
+    
+    if (!quiz) {
+      console.log(`Quiz with code ${code} not found`);
+      return res.status(404).json({ error: "Quiz not found" });
+    }
+    
+    console.log(`Quiz found. Creator: ${quiz.createdByEmail}, Requester: ${userEmail}`);
+    
+    // Verify the user is the creator
+    if (quiz.createdByEmail !== userEmail) {
+      return res.status(403).json({ error: "You can only delete quizzes you created" });
+    }
+    
+    // Delete the quiz
+    const result = await db.collection("Quizzes").deleteOne({ code: code });
+
+    if (result.deletedCount === 0) {
+      console.warn("Delete attempted but no document deleted for code:", code);
+      return res.status(404).json({ error: "Quiz not found" });
+    }
+    
+    console.log(`Quiz ${code} deleted successfully by ${userEmail}`);
+    res.json({ message: "Quiz deleted successfully", code });
+  } catch (err) {
+    console.error("Error deleting quiz:", err);
+    res.status(500).json({ error: "Failed to delete quiz" });
+  }
+});
+
+// ✅ Delete Quiz Route (by ID - legacy)
 app.delete("/api/quizzes/:quizId", async (req, res) => {
   try {
     const { quizId } = req.params;

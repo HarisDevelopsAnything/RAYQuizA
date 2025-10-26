@@ -52,6 +52,7 @@ interface QuestionSummary {
   selected: number[];
   isCorrect: boolean;
   gained: number;
+  timeBonus?: number;
 }
 
 const getRealtimeUrl = () => {
@@ -180,6 +181,7 @@ const LiveQuiz = () => {
     isCorrect: boolean;
     gained: number;
     correctAnswers: number[];
+    timeBonus?: number;
   } | null>(null);
   const [lastSummary, setLastSummary] = useState<QuestionSummary[]>([]);
   const [socketConnected, setSocketConnected] = useState(false);
@@ -372,6 +374,7 @@ const LiveQuiz = () => {
           isCorrect: Boolean(me?.isCorrect),
           gained: me?.gained ?? 0,
           correctAnswers,
+          timeBonus: me?.timeBonus,
         });
       }
     );
@@ -721,9 +724,9 @@ const LiveQuiz = () => {
                 <p>
                   {playerSummary
                     ? playerSummary.isCorrect
-                      ? `Nice! You earned ${playerSummary.gained} point${
+                      ? `Nice! You earned ${playerSummary.gained.toFixed(2)} point${
                           playerSummary.gained === 1 ? "" : "s"
-                        }.`
+                        }${playerSummary.timeBonus ? ` (${playerSummary.timeBonus}x speed bonus!)` : ""}.`
                       : playerSummary.gained < 0
                       ? `Tough luck. ${Math.abs(
                           playerSummary.gained
@@ -731,12 +734,30 @@ const LiveQuiz = () => {
                       : "No points this round, get ready for the next one!"
                     : "You joined mid-question. Scores resume next round."}
                 </p>
+                {playerSummary?.timeBonus && playerSummary.isCorrect && (
+                  <p className="time-bonus-info" style={{ fontSize: "0.9em", color: "#4CAF50", marginTop: "0.5rem" }}>
+                    🚀 Speed Bonus: 
+                    {playerSummary.timeBonus === 2.0 && " ⚡ Lightning Fast! (within 10%)"}
+                    {playerSummary.timeBonus === 1.75 && " 🔥 Super Quick! (within 25%)"}
+                    {playerSummary.timeBonus === 1.5 && " ⭐ Nice Speed! (within 50%)"}
+                    {playerSummary.timeBonus === 1.0 && " ✓ Good Job!"}
+                  </p>
+                )}
                 <ul>
                   {lastSummary.map((entry) => (
                     <li key={entry.userId}>
-                      <span>{entry.name}</span>
                       <span>
-                        {entry.gained > 0 ? `+${entry.gained}` : entry.gained}
+                        {entry.name}
+                        {entry.timeBonus && entry.timeBonus > 1 && (
+                          <span style={{ fontSize: "0.8em", color: "#FF9800", marginLeft: "0.5rem" }}>
+                            {entry.timeBonus === 2.0 && "⚡"}
+                            {entry.timeBonus === 1.75 && "🔥"}
+                            {entry.timeBonus === 1.5 && "⭐"}
+                          </span>
+                        )}
+                      </span>
+                      <span>
+                        {entry.gained > 0 ? `+${entry.gained.toFixed(2)}` : entry.gained.toFixed(2)}
                       </span>
                     </li>
                   ))}

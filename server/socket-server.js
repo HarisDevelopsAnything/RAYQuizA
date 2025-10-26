@@ -138,6 +138,7 @@ const startQuestion = (io, quizCode, lobby, index) => {
   lobby.started = true;
   lobby.currentQuestionIndex = index;
   lobby.questionEndsAt = Date.now() + durationSeconds * 1000;
+  lobby.questionStartTime = Date.now(); // Track when question started
   lobby.answers.clear();
   lobby.lastActivity = Date.now();
 
@@ -164,6 +165,15 @@ const startQuestion = (io, quizCode, lobby, index) => {
   });
 };
 
+const calculateTimeBonus = (timeLimit, timeTaken) => {
+  const percentage = (timeTaken / timeLimit) * 100;
+  
+  if (percentage <= 10) return 2.0;      // Within 10% of time: 2 pts
+  if (percentage <= 25) return 1.75;     // Within 25% of time: 1.75 pts
+  if (percentage <= 50) return 1.5;      // Within 50% of time: 1.5 pts
+  return 1.0;                            // Else: 1 pt
+};
+
 const finalizeQuestion = (io, quizCode, lobby) => {
   clearTimers(lobby);
 
@@ -177,10 +187,12 @@ const finalizeQuestion = (io, quizCode, lobby) => {
   );
   const points = Number(question.points ?? 1);
   const negative = Number(question.negativePoints ?? 0);
+  const timeLimit = Math.max(5, Number(question.timeLimit || question.timing || 30));
 
   const summary = [];
 
   lobby.questionEndsAt = null;
+  const questionStartTime = lobby.questionStartTime || Date.now();
 
   for (const participant of lobby.participants.values()) {
     const answerKey = participant.userId;
@@ -189,8 +201,17 @@ const finalizeQuestion = (io, quizCode, lobby) => {
     const isCorrect = submitted.length > 0 && arraysEqual(submitted, correctAnswers);
 
     let gained = 0;
+    let timeBonus = 1.0;
+    
     if (answerRecord) {
-      gained = isCorrect ? points : negative ? -Math.abs(negative) : 0;
+      if (isCorrect) {
+        // Calculate time bonus based on how quickly they answered
+        const timeTaken = (answerRecord.submittedAt - questionStartTime) / 1000; // in seconds
+        timeBonus = calculateTimeBonus(timeLimit, timeTaken);
+        gained = points * timeBonus;
+      } else {
+        gained = negative ? -Math.abs(negative) : 0;
+      }
     } else if (negative) {
       gained = -Math.abs(negative);
     }
@@ -198,11 +219,13 @@ const finalizeQuestion = (io, quizCode, lobby) => {
     const scoreboardEntry = lobby.scoreboard.get(answerKey) || {
       userId: participant.userId,
       name: participant.name,
+      email: participant.email,
       score: 0,
     };
 
     scoreboardEntry.score += gained;
     scoreboardEntry.name = participant.name;
+    scoreboardEntry.email = participant.email;
     lobby.scoreboard.set(answerKey, scoreboardEntry);
 
     summary.push({
@@ -211,6 +234,7 @@ const finalizeQuestion = (io, quizCode, lobby) => {
       selected: submitted,
       isCorrect,
       gained,
+      timeBonus: isCorrect ? timeBonus : undefined,
     });
   }
 
@@ -509,6 +533,22 @@ const setupRealtime = (io) => {
         questionIndex,
         receivedAt: Date.now(),
       });
+
+      // Check if everyone has answered - if so, auto-skip the timer
+      const totalParticipants = lobby.participants.size;
+      const totalAnswered = lobby.answers.size;
+      
+      console.log(`Quiz ${normalizedCode}: ${totalAnswered}/${totalParticipants} participants have answered`);
+      
+      if (totalAnswered === totalParticipants && totalParticipants > 0) {
+        console.log(`All participants answered! Auto-skipping timer for quiz ${normalizedCode}`);
+        // Clear the existing timer and immediately finalize the question
+        clearTimers(lobby);
+        // Add a small delay (1 second) so everyone sees their answer was submitted
+        lobby.advanceTimer = setTimeout(() => {
+          finalizeQuestion(io, normalizedCode, lobby);
+        }, 1000);
+      }
     });
 
     socket.on("leave-lobby", () => {

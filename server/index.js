@@ -297,6 +297,31 @@ app.get("/api/quizzes/code/:code", async (req, res) => {
   }
 });
 
+// ✅ Get Quiz by ID Route
+app.get("/api/quizzes/:quizId", async (req, res) => {
+  try {
+    const { quizId } = req.params;
+    const db = await getDb();
+    const { ObjectId } = require("mongodb");
+    
+    // Validate ObjectId format
+    if (!ObjectId.isValid(quizId)) {
+      return res.status(400).json({ error: "Invalid quiz ID format" });
+    }
+    
+    const quiz = await db.collection("Quizzes").findOne({ _id: new ObjectId(quizId) });
+    
+    if (!quiz) {
+      return res.status(404).json({ error: "Quiz not found" });
+    }
+    
+    res.json(quiz);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch quiz" });
+  }
+});
+
 // ✅ Delete Quiz Route
 app.delete("/api/quizzes/:quizId", async (req, res) => {
   try {

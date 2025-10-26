@@ -12,6 +12,7 @@ import LiveQuiz from "./pages/QuizPage/LiveQuiz";
 import Support from "./pages/Support/Support";
 import Settings from "./pages/Settings/Settings";
 import QuizHistory from "./pages/QuizHistory/QuizHistory";
+import QuizPresenter from "./pages/QuizPresenter/QuizPresenter";
 import { Toaster } from "./components/ui/toaster";
 import CursorFollower from "./components/general/CursorFollower/CursorFollower";
 
@@ -33,6 +34,7 @@ const App = () => {
           <Route path="/quiz-history" element={<QuizHistory />}></Route>
           <Route path="/quiz/:quizId" element={<QuizPage />}></Route>
           <Route path="/quiz/live/:quizCode" element={<LiveQuiz />}></Route>
+          <Route path="/quiz/presenter/:quizId" element={<QuizPresenter />}></Route>
         </Routes>
       </BrowserRouter>
       <Toaster />

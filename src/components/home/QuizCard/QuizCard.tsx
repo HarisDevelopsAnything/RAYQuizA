@@ -1,7 +1,7 @@
 import { useColorMode } from "@/components/ui/color-mode";
-import { Button, ButtonGroup, Card, Center } from "@chakra-ui/react";
+import { Button, ButtonGroup, Card, Center, VStack } from "@chakra-ui/react";
 import { useAccentColor } from "@/contexts/UserPreferencesContext";
-import { IoTrash } from "react-icons/io5";
+import { IoTrash, IoTvOutline } from "react-icons/io5";
 
 interface Props {
   name: string;
@@ -9,6 +9,7 @@ interface Props {
   duration: string;
   onClickTakeQuiz?: () => void;
   onClickViewDetails?: () => void;
+  onClickPresent?: () => void;
   onClickDelete?: () => void;
 }
 
@@ -18,6 +19,7 @@ const QuizCard = ({
   duration,
   onClickTakeQuiz,
   onClickViewDetails,
+  onClickPresent,
   onClickDelete,
 }: Props) => {
   const { colorMode } = useColorMode();
@@ -45,49 +47,76 @@ const QuizCard = ({
         {duration}
       </Card.Body>
       <Card.Footer marginTop="10px" margin="0px" padding="0">
-        <ButtonGroup
-          width={"100%"}
-          marginTop="10px"
-          margin="0px"
-          gap="0"
-          borderBottomRadius={"5px"}
-        >
-          <Button
-            variant={"solid"}
-            colorPalette={accentColor as any}
-            onClick={onClickTakeQuiz}
+        <VStack width="100%" gap="0">
+          {/* Main actions row */}
+          <ButtonGroup
+            width={"100%"}
             margin="0px"
-            width={onClickDelete ? "33.33%" : "50%"}
-            borderRadius="0"
-            borderBottomLeftRadius={"10px"}
+            gap="0"
           >
-            Host Quiz
-          </Button>
-          <Button
-            variant={"subtle"}
-            colorPalette={accentColor as any}
-            onClick={onClickViewDetails}
-            margin="0px"
-            width={onClickDelete ? "33.33%" : "50%"}
-            borderRadius={"0"}
-            borderBottomRightRadius={onClickDelete ? "0" : "10px"}
-          >
-            View details
-          </Button>
-          {onClickDelete && (
             <Button
               variant={"solid"}
-              colorPalette="red"
-              onClick={onClickDelete}
+              colorPalette={accentColor as any}
+              onClick={onClickTakeQuiz}
               margin="0px"
-              width="33.33%"
-              borderRadius={"0"}
-              borderBottomRightRadius={"10px"}
+              width="50%"
+              borderRadius="0"
+              borderBottomLeftRadius={(onClickPresent || onClickDelete) ? "0" : "10px"}
             >
-              <IoTrash /> Delete
+              Host Quiz
             </Button>
+            <Button
+              variant={"subtle"}
+              colorPalette={accentColor as any}
+              onClick={onClickViewDetails}
+              margin="0px"
+              width="50%"
+              borderRadius={"0"}
+              borderBottomRightRadius={(onClickPresent || onClickDelete) ? "0" : "10px"}
+            >
+              View details
+            </Button>
+          </ButtonGroup>
+
+          {/* Secondary actions row */}
+          {(onClickPresent || onClickDelete) && (
+            <ButtonGroup
+              width={"100%"}
+              margin="0px"
+              gap="0"
+            >
+              {onClickPresent && (
+                <Button
+                  variant={"outline"}
+                  colorPalette="purple"
+                  onClick={onClickPresent}
+                  margin="0px"
+                  width={onClickDelete ? "50%" : "100%"}
+                  borderRadius="0"
+                  borderBottomLeftRadius={"10px"}
+                  borderTopWidth="0"
+                >
+                  <IoTvOutline /> Present
+                </Button>
+              )}
+              {onClickDelete && (
+                <Button
+                  variant={"outline"}
+                  colorPalette="red"
+                  onClick={onClickDelete}
+                  margin="0px"
+                  width={onClickPresent ? "50%" : "100%"}
+                  borderRadius={"0"}
+                  borderBottomRightRadius={"10px"}
+                  borderTopWidth="0"
+                  borderLeftWidth={onClickPresent ? "1px" : "0"}
+                >
+                  <IoTrash /> Delete
+                </Button>
+              )}
+            </ButtonGroup>
           )}
-        </ButtonGroup>
+        </VStack>
       </Card.Footer>
     </Card.Root>
   );

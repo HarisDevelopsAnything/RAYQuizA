@@ -384,16 +384,20 @@ app.delete("/api/user-preferences/:userId", async (req, res) => {
 });
 
 // ✅ Get quiz history for a user (quizzes they created)
-app.get("/api/quiz-history/created/:userId", async (req, res) => {
+app.get("/api/quiz-history/created/:userEmail", async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { userEmail } = req.params;
+    const decodedEmail = decodeURIComponent(userEmail);
+    console.log("Fetching created quiz history for email:", decodedEmail);
+    
     const db = await getDb();
     
     const history = await db.collection("QuizHistory")
-      .find({ creatorId: userId })
+      .find({ creatorEmail: decodedEmail })
       .sort({ completedAt: -1 })
       .toArray();
     
+    console.log(`Found ${history.length} created quizzes for ${decodedEmail}`);
     res.json({ history });
   } catch (err) {
     console.error("Error fetching created quiz history:", err);
@@ -402,16 +406,20 @@ app.get("/api/quiz-history/created/:userId", async (req, res) => {
 });
 
 // ✅ Get quiz history for a user (quizzes they participated in)
-app.get("/api/quiz-history/participated/:userId", async (req, res) => {
+app.get("/api/quiz-history/participated/:userEmail", async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { userEmail } = req.params;
+    const decodedEmail = decodeURIComponent(userEmail);
+    console.log("Fetching participated quiz history for email:", decodedEmail);
+    
     const db = await getDb();
     
     const history = await db.collection("QuizHistory")
-      .find({ "participants.userId": userId })
+      .find({ "participants.email": decodedEmail })
       .sort({ completedAt: -1 })
       .toArray();
     
+    console.log(`Found ${history.length} participated quizzes for ${decodedEmail}`);
     res.json({ history });
   } catch (err) {
     console.error("Error fetching participated quiz history:", err);

@@ -117,6 +117,28 @@ const createPlayerName = (locationState?: {
   return `Player-${Math.floor(Math.random() * 900 + 100)}`;
 };
 
+const getPlayerEmail = (locationState?: {
+  isGuest?: boolean;
+}): string | undefined => {
+  // Guests don't have emails
+  if (locationState?.isGuest) {
+    return undefined;
+  }
+
+  const storedUser = localStorage.getItem("user");
+  if (storedUser) {
+    try {
+      const parsed = JSON.parse(storedUser);
+      if (parsed?.email) {
+        return parsed.email as string;
+      }
+    } catch (err) {
+      console.warn("Failed to parse stored user", err);
+    }
+  }
+  return undefined;
+};
+
 const LiveQuiz = () => {
   const navigate = useNavigate();
   const { quizCode: rawQuizCode } = useParams<{ quizCode: string }>();
@@ -136,6 +158,7 @@ const LiveQuiz = () => {
   const socketRef = useRef<Socket | null>(null);
   const playerIdRef = useRef<string>(createPlayerId(locationState));
   const playerNameRef = useRef<string>(createPlayerName(locationState));
+  const playerEmailRef = useRef<string | undefined>(getPlayerEmail(locationState));
 
   const [quizMeta, setQuizMeta] = useState<QuizMeta | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -234,6 +257,7 @@ const LiveQuiz = () => {
         player: {
           id: playerIdRef.current,
           name: playerNameRef.current,
+          email: playerEmailRef.current,
           isHost: requestedHost,
         },
       });

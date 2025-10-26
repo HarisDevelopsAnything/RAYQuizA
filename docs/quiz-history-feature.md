@@ -24,12 +24,13 @@ The Quiz History feature stores and displays the results of every conducted quiz
   quizCode: String,           // The unique quiz code
   quizTitle: String,          // Title of the quiz
   quizId: ObjectId | null,    // Reference to the original quiz
-  creatorId: String,          // User ID of quiz creator
-  hostUserId: String,         // User ID of the host who conducted the quiz
+  creatorEmail: String,       // Email of quiz creator (from quiz.createdByEmail)
+  hostEmail: String,          // Email of the host who conducted the quiz
   participants: [
     {
       userId: String,         // User ID or guest ID
       name: String,           // Display name
+      email: String | null,   // User email (null for guests)
       score: Number           // Final score
     }
   ],
@@ -38,19 +39,29 @@ The Quiz History feature stores and displays the results of every conducted quiz
 }
 ```
 
+**Key Points:**
+- Uses **email** as the primary identifier for authenticated users
+- Guests have `email: null`
+- `creatorEmail` comes from the quiz document's `createdByEmail` field
+- `hostEmail` is the email of whoever actually hosted/started the quiz session
+
 ## API Endpoints
 
 ### Get Created Quiz History
 ```
-GET /api/quiz-history/created/:userId
+GET /api/quiz-history/created/:userEmail
 ```
-Returns all quizzes created by the specified user.
+Returns all quizzes created by the user with the specified email.
+
+**Example:** `GET /api/quiz-history/created/user@example.com`
 
 ### Get Participated Quiz History
 ```
-GET /api/quiz-history/participated/:userId
+GET /api/quiz-history/participated/:userEmail
 ```
-Returns all quizzes the user participated in.
+Returns all quizzes where the user (identified by email) participated.
+
+**Example:** `GET /api/quiz-history/participated/user@example.com`
 
 ### Get Specific Quiz History
 ```

@@ -78,30 +78,36 @@ const endQuiz = async (io, quizCode, lobby) => {
     const participants = scoreboard.map(entry => ({
       userId: entry.userId,
       name: entry.name,
+      email: entry.email || null,
       score: entry.score,
     }));
 
-    // Determine host user ID
-    let hostUserId = null;
+    // Determine host email
+    let hostEmail = null;
     for (const participant of lobby.participants.values()) {
-      if (participant.isHost) {
-        hostUserId = participant.userId;
+      if (participant.isHost && participant.email) {
+        hostEmail = participant.email;
         break;
       }
     }
+
+    // Get creator email from quiz
+    const creatorEmail = lobby.quiz.createdByEmail || hostEmail;
 
     const quizHistoryEntry = {
       quizCode,
       quizTitle: lobby.quiz.title || "Untitled Quiz",
       quizId: lobby.quiz._id || null,
-      creatorId: lobby.quiz.createdBy || hostUserId,
-      hostUserId,
+      creatorEmail,
+      hostEmail,
       participants,
       completedAt: new Date(),
       totalParticipants: participants.length,
     };
 
+    console.log("Saving quiz history:", JSON.stringify(quizHistoryEntry, null, 2));
     await db.collection("QuizHistory").insertOne(quizHistoryEntry);
+    console.log("Quiz history saved successfully");
   } catch (error) {
     console.error("Failed to save quiz history:", error);
   }
@@ -336,6 +342,7 @@ const setupRealtime = (io) => {
 
       const playerId = player?.id || `guest-${socket.id}`;
       const participantName = player?.name || `Player-${socket.id.slice(-4)}`;
+      const participantEmail = player?.email || null;
       const hostRequested = Boolean(player?.isHost);
       let isHost = hostRequested;
 
@@ -350,6 +357,7 @@ const setupRealtime = (io) => {
         socketId: socket.id,
         userId: playerId,
         name: participantName,
+        email: participantEmail,
         isHost,
         joinedAt: new Date().toISOString(),
       };
@@ -363,12 +371,14 @@ const setupRealtime = (io) => {
         lobby.scoreboard.set(playerId, {
           userId: playerId,
           name: participantName,
+          email: participantEmail,
           score: 0,
         });
       } else {
         const scoreboardEntry = lobby.scoreboard.get(playerId);
         if (scoreboardEntry) {
           scoreboardEntry.name = participantName;
+          scoreboardEntry.email = participantEmail;
           lobby.scoreboard.set(playerId, scoreboardEntry);
         }
       }

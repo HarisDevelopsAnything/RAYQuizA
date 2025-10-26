@@ -8,6 +8,7 @@ import "./QuizHistory.css";
 interface Participant {
   userId: string;
   name: string;
+  email: string | null;
   score: number;
 }
 
@@ -16,8 +17,8 @@ interface QuizHistoryEntry {
   quizCode: string;
   quizTitle: string;
   quizId: string | null;
-  creatorId: string;
-  hostUserId: string;
+  creatorEmail: string;
+  hostEmail: string;
   participants: Participant[];
   completedAt: string;
   totalParticipants: number;
@@ -46,20 +47,43 @@ const QuizHistory = () => {
       }
 
       const user = JSON.parse(userString);
-      const userId = user._id || user.googleId || user.id;
+      const userEmail = user.email;
+
+      if (!userEmail) {
+        console.error("No email found for user");
+        setLoading(false);
+        return;
+      }
+
+      console.log("Fetching quiz history for email:", userEmail);
+
+      // Use the same backend URL pattern as other components
+      const baseURL = "https://rayquiza-backend.onrender.com";
 
       // Fetch created quizzes
       const createdResponse = await fetch(
-        `${import.meta.env.VITE_SERVER_URL || "http://localhost:5000"}/api/quiz-history/created/${userId}`
+        `${baseURL}/api/quiz-history/created/${encodeURIComponent(userEmail)}`
       );
+      
+      if (!createdResponse.ok) {
+        throw new Error(`Failed to fetch created history: ${createdResponse.status}`);
+      }
+      
       const createdData = await createdResponse.json();
+      console.log("Created quiz history:", createdData);
       setCreatedHistory(createdData.history || []);
 
       // Fetch participated quizzes
       const participatedResponse = await fetch(
-        `${import.meta.env.VITE_SERVER_URL || "http://localhost:5000"}/api/quiz-history/participated/${userId}`
+        `${baseURL}/api/quiz-history/participated/${encodeURIComponent(userEmail)}`
       );
+      
+      if (!participatedResponse.ok) {
+        throw new Error(`Failed to fetch participated history: ${participatedResponse.status}`);
+      }
+      
       const participatedData = await participatedResponse.json();
+      console.log("Participated quiz history:", participatedData);
       setParticipatedHistory(participatedData.history || []);
 
       setLoading(false);
@@ -84,8 +108,8 @@ const QuizHistory = () => {
     const sortedParticipants = [...entry.participants].sort((a, b) => b.score - a.score);
     const userString = localStorage.getItem("user");
     const user = userString ? JSON.parse(userString) : null;
-    const userId = user?._id || user?.googleId || user?.id;
-    const userScore = entry.participants.find(p => p.userId === userId)?.score;
+    const userEmail = user?.email;
+    const userScore = entry.participants.find(p => p.email === userEmail)?.score;
 
     return (
       <Card.Root key={entry._id} width="100%" p={4} mb={4}>
@@ -111,16 +135,17 @@ const QuizHistory = () => {
                 key={participant.userId}
                 justifyContent="space-between"
                 p={2}
-                bg={participant.userId === userId ? `${accentColor}.100` : "gray.50"}
+                bg={participant.email === userEmail ? `${accentColor}.100` : "gray.50"}
                 borderRadius="md"
               >
                 <HStack>
                   <Badge colorPalette={index === 0 ? "yellow" : index === 1 ? "gray" : index === 2 ? "orange" : "blue"}>
                     #{index + 1}
                   </Badge>
-                  <Text fontWeight={participant.userId === userId ? "bold" : "normal"}>
+                  <Text fontWeight={participant.email === userEmail ? "bold" : "normal"}>
                     {participant.name}
-                    {participant.userId === userId && " (You)"}
+                    {participant.email === userEmail && " (You)"}
+                    {!participant.email && " (Guest)"}
                   </Text>
                 </HStack>
                 <Badge colorPalette="green" fontSize="md">

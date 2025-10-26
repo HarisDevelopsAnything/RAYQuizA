@@ -2,6 +2,7 @@ import { useColorMode } from "@/components/ui/color-mode";
 import { Button, ButtonGroup, Card, Center, VStack } from "@chakra-ui/react";
 import { useAccentColor } from "@/contexts/UserPreferencesContext";
 import { IoTrash, IoTvOutline } from "react-icons/io5";
+import "./QuizCard.css";
 
 interface Props {
   name: string;
@@ -11,6 +12,7 @@ interface Props {
   onClickViewDetails?: () => void;
   onClickPresent?: () => void;
   onClickDelete?: () => void;
+  isDeleting?: boolean;
 }
 
 const QuizCard = ({
@@ -21,10 +23,12 @@ const QuizCard = ({
   onClickViewDetails,
   onClickPresent,
   onClickDelete,
+  isDeleting = false,
 }: Props) => {
   const { colorMode } = useColorMode();
   const accentColor = useAccentColor();
   return (
+    <div className={`quiz-card-wrapper ${isDeleting ? "quiz-card-deleting" : ""}`}>
     <Card.Root
       margin={"10px"}
       padding={"0px"}
@@ -119,6 +123,7 @@ const QuizCard = ({
         </VStack>
       </Card.Footer>
     </Card.Root>
+    </div>
   );
 };
 

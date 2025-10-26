@@ -54,6 +54,7 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
   const [quizzesLoading, setQuizzesLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [quizToDelete, setQuizToDelete] = useState<Quiz | null>(null);
+  const [deletingQuizId, setDeletingQuizId] = useState<string | null>(null);
   const navigate = useNavigate();
   const accentColor = useAccentColor();
   useEffect(() => {
@@ -143,6 +144,13 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
       const user = JSON.parse(userString);
       const userEmail = user.email;
 
+      // Start the deletion animation
+      setDeletingQuizId(quizToDelete._id);
+      setDeleteDialogOpen(false);
+
+      // Wait a bit for the animation to be visible before making the API call
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       const baseURL = "https://rayquiza-backend.onrender.com";
       // Provide userEmail in query string as a fallback (some proxies or setups
       // may strip bodies from DELETE requests). We still include the JSON body
@@ -164,8 +172,12 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
         throw new Error(errorData.error || "Failed to delete quiz");
       }
 
+      // Wait for the animation to complete before removing from state
+      await new Promise(resolve => setTimeout(resolve, 400));
+
       // Remove the quiz from the local state
       setQuizzes((prev) => prev.filter((q) => q._id !== quizToDelete._id));
+      setDeletingQuizId(null);
 
       toaster.create({
         title: "Quiz deleted",
@@ -173,10 +185,10 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
         type: "success",
       });
 
-      setDeleteDialogOpen(false);
       setQuizToDelete(null);
     } catch (error) {
       console.error("Error deleting quiz:", error);
+      setDeletingQuizId(null);
       toaster.create({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to delete quiz",
@@ -210,7 +222,7 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
           </VStack>
         </Center>
       )}
-      <SimpleGrid columns={isMobile ? 1 : 4}>
+      <SimpleGrid columns={isMobile ? 1 : 4} className="quiz-grid">
         {quizzes.map((quiz) => {
           // Safety check and calculate total duration from questions
           const questions = Array.isArray(quiz.questions) ? quiz.questions : [];
@@ -233,6 +245,7 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
               name={quiz.title}
               desc={quiz.description || "No description available"}
               duration={durationText}
+              isDeleting={deletingQuizId === quiz._id}
               onClickTakeQuiz={() => {
                 // Navigate to live quiz as host
                 if (safeQuiz.code && safeQuiz.code !== "NO_CODE") {

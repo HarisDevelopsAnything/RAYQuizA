@@ -503,6 +503,12 @@ const setupRealtime = (io) => {
   io.on("connection", (socket) => {
     socket.data.quizCode = null;
 
+    // Time synchronization handler - responds immediately with server time
+    socket.on("time-sync-ping", (clientSendTime, callback) => {
+      const serverTime = Date.now();
+      callback({ serverTime, clientSendTime });
+    });
+
     socket.on("join-lobby", async ({ quizCode, player }) => {
       const normalizedCode = normalizeCode(quizCode);
       if (!normalizedCode) {

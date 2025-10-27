@@ -214,6 +214,41 @@ const LiveQuiz = () => {
     shield?: boolean;
   }>({});
 
+  // Time synchronization function using NTP-like approach
+  const syncTimeWithServer = async (socket: Socket) => {
+    const samples: number[] = [];
+    const numSamples = 5; // Take multiple samples for accuracy
+
+    for (let i = 0; i < numSamples; i++) {
+      const clientSendTime = Date.now();
+      
+      await new Promise<void>((resolve) => {
+        socket.emit("time-sync-ping", clientSendTime, (response: { serverTime: number; clientSendTime: number }) => {
+          const clientReceiveTime = Date.now();
+          const roundTripTime = clientReceiveTime - clientSendTime;
+          const estimatedServerTimeAtReceive = response.serverTime + roundTripTime / 2;
+          const offset = estimatedServerTimeAtReceive - clientReceiveTime;
+          
+          samples.push(offset);
+          console.log(`[Time Sync ${i + 1}/${numSamples}] RTT: ${roundTripTime}ms, Offset: ${offset}ms`);
+          resolve();
+        });
+      });
+
+      // Small delay between samples
+      if (i < numSamples - 1) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+
+    // Use median offset to avoid outliers from network jitter
+    samples.sort((a, b) => a - b);
+    const medianOffset = samples[Math.floor(samples.length / 2)];
+    
+    setServerTimeOffset(medianOffset);
+    console.log(`[Time Sync Complete] Median offset: ${medianOffset}ms (samples: ${samples.join(', ')})`);
+  };
+
   useEffect(() => {
     if (!quizCode) {
       toaster.create({
@@ -243,6 +278,9 @@ const LiveQuiz = () => {
     socket.on("connect", () => {
       setSocketConnected(true);
       setClientSocketId(socket.id ?? null);
+
+      // Perform time synchronization immediately after connection
+      syncTimeWithServer(socket);
 
       // Detect connection type
       const transport = socket.io.engine.transport.name;
@@ -383,13 +421,17 @@ const LiveQuiz = () => {
         serverTime: number;
         timeLimit: number;
       }) => {
-        // Calculate server time offset using the server's actual timestamp
-        // This accounts for clock differences between client and server
+        // We already have accurate offset from initial sync, 
+        // but update it with current server time for extra precision
         const clientReceiveTime = Date.now();
-        const calculatedOffset = serverTime - clientReceiveTime;
-        setServerTimeOffset(calculatedOffset);
+        const instantOffset = serverTime - clientReceiveTime;
         
-        console.log(`[Time Sync] Server time: ${serverTime}, Client time: ${clientReceiveTime}, Offset: ${calculatedOffset}ms`);
+        // Blend the pre-calculated offset with instant offset (weighted average)
+        // This accounts for any drift while maintaining accuracy
+        const blendedOffset = serverTimeOffset * 0.7 + instantOffset * 0.3;
+        setServerTimeOffset(blendedOffset);
+        
+        console.log(`[Question Start] Initial offset: ${serverTimeOffset}ms, Instant: ${instantOffset}ms, Blended: ${blendedOffset.toFixed(2)}ms`);
         
         setPhase("question");
         setQuestionIndex(index);

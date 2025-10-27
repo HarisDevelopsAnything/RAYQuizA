@@ -178,12 +178,13 @@ const startQuestion = (io, quizCode, lobby, index) => {
   const question = lobby.quiz.questions[index];
   const durationSeconds = Math.max(5, Number(question.timeLimit || question.timing || 30));
 
+  const serverNow = Date.now(); // Capture server time once
   lobby.started = true;
   lobby.currentQuestionIndex = index;
-  lobby.questionEndsAt = Date.now() + durationSeconds * 1000;
-  lobby.questionStartTime = Date.now(); // Track when question started
+  lobby.questionEndsAt = serverNow + durationSeconds * 1000;
+  lobby.questionStartTime = serverNow; // Track when question started
   lobby.answers.clear();
-  lobby.lastActivity = Date.now();
+  lobby.lastActivity = serverNow;
 
   clearTimers(lobby);
 
@@ -204,6 +205,7 @@ const startQuestion = (io, quizCode, lobby, index) => {
       negativePoints: Number(question.negativePoints ?? 0),
     },
     endsAt: lobby.questionEndsAt,
+    serverTime: serverNow, // Send current server time for synchronization
     timeLimit: durationSeconds,
   });
 };

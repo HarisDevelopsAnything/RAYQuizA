@@ -374,20 +374,22 @@ const LiveQuiz = () => {
         questionIndex: index,
         question,
         endsAt,
+        serverTime,
         timeLimit: limit,
       }: {
         questionIndex: number;
         question: QuestionPayload;
         endsAt: number;
+        serverTime: number;
         timeLimit: number;
       }) => {
-        // Calculate server time offset when question starts
-        // This syncs our local clock with the server's clock
+        // Calculate server time offset using the server's actual timestamp
+        // This accounts for clock differences between client and server
         const clientReceiveTime = Date.now();
-        const calculatedOffset = endsAt - limit * 1000 - clientReceiveTime;
+        const calculatedOffset = serverTime - clientReceiveTime;
         setServerTimeOffset(calculatedOffset);
         
-        console.log(`[Time Sync] Server offset: ${calculatedOffset}ms, Server endsAt: ${endsAt}, Local time: ${clientReceiveTime}`);
+        console.log(`[Time Sync] Server time: ${serverTime}, Client time: ${clientReceiveTime}, Offset: ${calculatedOffset}ms`);
         
         setPhase("question");
         setQuestionIndex(index);

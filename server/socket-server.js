@@ -5,6 +5,42 @@ const REVIEW_DELAY_MS = Number(process.env.QUIZ_REVIEW_DELAY_MS || 8000); // 8 s
 const CLEANUP_INTERVAL_MS = 60 * 1000;
 const LOBBY_IDLE_MS = 60 * 60 * 1000;
 
+// Powerup system constants
+const POWERUP_TYPES = ['50-50', 'time-freeze', 'double-points', 'shield'];
+const POWERUP_GRANT_THRESHOLD = 2; // Consecutive correct fast answers needed
+const MAX_POWERUPS_PER_PLAYER = 3;
+
+const POWERUP_DEFINITIONS = {
+  '50-50': {
+    type: '50-50',
+    name: '50-50',
+    description: 'Eliminate 2 incorrect answers',
+    icon: '✂️',
+    color: '#FF6B6B',
+  },
+  'time-freeze': {
+    type: 'time-freeze',
+    name: 'Time Freeze',
+    description: 'Get 15 extra seconds',
+    icon: '⏰',
+    color: '#4ECDC4',
+  },
+  'double-points': {
+    type: 'double-points',
+    name: 'Double Points',
+    description: 'Earn 2x points for this question',
+    icon: '⭐',
+    color: '#FFD93D',
+  },
+  'shield': {
+    type: 'shield',
+    name: 'Shield',
+    description: 'Protect from negative points',
+    icon: '🛡️',
+    color: '#95E1D3',
+  },
+};
+
 const sortNumbers = (values) =>
   values.map((value) => Number(value)).filter((value) => !Number.isNaN(value)).sort((a, b) => a - b);
 
@@ -181,6 +217,64 @@ const calculateTimeBonus = (timeLimit, timeTaken) => {
   return 1.0;                            // Else: 1 pt
 };
 
+// Grant a random powerup to a player
+const grantRandomPowerup = (lobby, userId) => {
+  if (!lobby.playerPowerups.has(userId)) {
+    lobby.playerPowerups.set(userId, []);
+  }
+
+  const playerPowerups = lobby.playerPowerups.get(userId);
+  
+  // Select random powerup type
+  const randomType = POWERUP_TYPES[Math.floor(Math.random() * POWERUP_TYPES.length)];
+  const definition = POWERUP_DEFINITIONS[randomType];
+  
+  const powerup = {
+    id: `${userId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    type: definition.type,
+    name: definition.name,
+    description: definition.description,
+    icon: definition.icon,
+    color: definition.color,
+    grantedAt: Date.now(),
+  };
+
+  // Maintain max 3 powerups per player (FIFO)
+  if (playerPowerups.length >= MAX_POWERUPS_PER_PLAYER) {
+    playerPowerups.shift(); // Remove oldest
+  }
+  
+  playerPowerups.push(powerup);
+  lobby.playerPowerups.set(userId, playerPowerups);
+
+  return powerup;
+};
+
+// Check if player is eligible for powerup grant
+const checkPowerupEligibility = (lobby, userId, isCorrect, timeBonus) => {
+  if (!isCorrect || timeBonus < 2.0) {
+    // Not a fast correct answer, reset streak
+    if (lobby.powerupStats.has(userId)) {
+      lobby.powerupStats.set(userId, { fastCorrectStreak: 0 });
+    }
+    return null;
+  }
+
+  // Track fast correct answers
+  const stats = lobby.powerupStats.get(userId) || { fastCorrectStreak: 0 };
+  stats.fastCorrectStreak = (stats.fastCorrectStreak || 0) + 1;
+  lobby.powerupStats.set(userId, stats);
+
+  // Grant powerup when threshold is reached
+  if (stats.fastCorrectStreak >= POWERUP_GRANT_THRESHOLD) {
+    stats.fastCorrectStreak = 0; // Reset streak
+    lobby.powerupStats.set(userId, stats);
+    return grantRandomPowerup(lobby, userId);
+  }
+
+  return null;
+};
+
 const finalizeQuestion = (io, quizCode, lobby) => {
   clearTimers(lobby);
 
@@ -197,6 +291,7 @@ const finalizeQuestion = (io, quizCode, lobby) => {
   const timeLimit = Math.max(5, Number(question.timeLimit || question.timing || 30));
 
   const summary = [];
+  const powerupGrants = []; // Track powerup grants for this question
 
   lobby.questionEndsAt = null;
   const questionStartTime = lobby.questionStartTime || Date.now();
@@ -210,17 +305,37 @@ const finalizeQuestion = (io, quizCode, lobby) => {
     let gained = 0;
     let timeBonus = 1.0;
     
+    // Check for active powerup effects
+    const activeEffects = lobby.activePowerupEffects.get(answerKey) || {};
+    
     if (answerRecord) {
       if (isCorrect) {
         // Calculate time bonus based on how quickly they answered
         const timeTaken = (answerRecord.submittedAt - questionStartTime) / 1000; // in seconds
         timeBonus = calculateTimeBonus(timeLimit, timeTaken);
-        gained = points * timeBonus;
+        let basePoints = points * timeBonus;
+        
+        // Apply double points powerup if active
+        if (activeEffects.doublePoints) {
+          basePoints *= 2;
+        }
+        
+        gained = basePoints;
       } else {
-        gained = negative ? -Math.abs(negative) : 0;
+        // Apply shield powerup if active (blocks negative points)
+        if (activeEffects.shield) {
+          gained = 0;
+        } else {
+          gained = negative ? -Math.abs(negative) : 0;
+        }
       }
     } else if (negative) {
-      gained = -Math.abs(negative);
+      // Apply shield powerup if active (blocks negative points for no answer)
+      if (activeEffects.shield) {
+        gained = 0;
+      } else {
+        gained = -Math.abs(negative);
+      }
     }
 
     const scoreboardEntry = lobby.scoreboard.get(answerKey) || {
@@ -243,7 +358,19 @@ const finalizeQuestion = (io, quizCode, lobby) => {
       gained,
       timeBonus: isCorrect ? timeBonus : undefined,
     });
+    
+    // Check for powerup eligibility and grant if qualified
+    const grantedPowerup = checkPowerupEligibility(lobby, participant.userId, isCorrect, timeBonus);
+    if (grantedPowerup) {
+      powerupGrants.push({
+        userId: participant.userId,
+        powerup: grantedPowerup,
+      });
+    }
   }
+  
+  // Clear active powerup effects for next question
+  lobby.activePowerupEffects.clear();
 
   io.to(quizCode).emit("question-ended", {
     quizCode,
@@ -252,6 +379,17 @@ const finalizeQuestion = (io, quizCode, lobby) => {
     scoreboard: Array.from(lobby.scoreboard.values()),
     summary,
   });
+
+  // Emit powerup grants to individual players
+  for (const grant of powerupGrants) {
+    const participant = Array.from(lobby.participants.values()).find(p => p.userId === grant.userId);
+    if (participant) {
+      io.to(participant.socketId).emit("powerup-granted", {
+        powerup: grant.powerup,
+        allPowerups: lobby.playerPowerups.get(grant.userId) || [],
+      });
+    }
+  }
 
   emitScoreboard(io, quizCode, lobby);
 
@@ -291,6 +429,9 @@ const getOrCreateLobby = async (quizCode) => {
     participants: new Map(),
     scoreboard: new Map(),
     answers: new Map(),
+    powerupStats: new Map(), // Track powerup eligibility per player
+    playerPowerups: new Map(), // Track active powerups per player
+    activePowerupEffects: new Map(), // Track active powerup effects during questions
     hostSocketId: null,
     hostEmail: null, // Track the actual host's email
     creatorEmail: quiz.createdByEmail || null, // Quiz creator's email
@@ -486,6 +627,12 @@ const setupRealtime = (io) => {
         socket.emit("host-confirmed", { quizCode: normalizedCode });
       }
 
+      // Send player's powerups
+      const playerPowerups = lobby.playerPowerups.get(playerId) || [];
+      socket.emit("powerups-sync", {
+        powerups: playerPowerups,
+      });
+
       broadcastLobby(io, normalizedCode, lobby);
       emitScoreboard(io, normalizedCode, lobby);
 
@@ -635,6 +782,114 @@ const setupRealtime = (io) => {
         lobby.advanceTimer = setTimeout(() => {
           finalizeQuestion(io, normalizedCode, lobby);
         }, 1000);
+      }
+    });
+
+    socket.on("use-powerup", ({ powerupId, powerupType }) => {
+      const quizCode = socket.data.quizCode;
+      if (!quizCode) {
+        return;
+      }
+
+      const lobby = lobbies.get(quizCode);
+      if (!lobby) {
+        return;
+      }
+
+      const participant = lobby.participants.get(socket.id);
+      if (!participant) {
+        return;
+      }
+
+      const userId = participant.userId;
+      const playerPowerups = lobby.playerPowerups.get(userId) || [];
+      
+      // Find and remove the powerup
+      const powerupIndex = playerPowerups.findIndex(p => p.id === powerupId);
+      if (powerupIndex === -1) {
+        socket.emit("powerup-use-rejected", { reason: "Powerup not found" });
+        return;
+      }
+
+      const powerup = playerPowerups[powerupIndex];
+      playerPowerups.splice(powerupIndex, 1);
+      lobby.playerPowerups.set(userId, playerPowerups);
+
+      // Apply powerup effect based on type
+      if (powerupType === '50-50') {
+        // For 50-50, send filtered options to the client
+        if (lobby.started && lobby.currentQuestionIndex >= 0) {
+          const question = lobby.quiz.questions[lobby.currentQuestionIndex];
+          const correctAnswers = ensureArray(question.correctOption ?? question.correctAnswers ?? question.correctAnswer ?? []);
+          const incorrectIndices = question.options
+            .map((_, index) => index)
+            .filter(index => !correctAnswers.includes(index));
+          
+          // Randomly select 2 incorrect answers to eliminate
+          const toEliminate = [];
+          while (toEliminate.length < 2 && incorrectIndices.length > 0) {
+            const randomIndex = Math.floor(Math.random() * incorrectIndices.length);
+            toEliminate.push(incorrectIndices[randomIndex]);
+            incorrectIndices.splice(randomIndex, 1);
+          }
+
+          socket.emit("powerup-used", {
+            powerupId,
+            type: powerupType,
+            effect: { eliminatedOptions: toEliminate },
+          });
+        }
+      } else if (powerupType === 'time-freeze') {
+        // Add 15 seconds to the timer
+        if (lobby.questionEndsAt) {
+          lobby.questionEndsAt += 15000; // Add 15 seconds
+          
+          // Also extend the timer
+          if (lobby.questionTimer) {
+            clearTimeout(lobby.questionTimer);
+            const newDuration = lobby.questionEndsAt - Date.now();
+            if (newDuration > 0) {
+              lobby.questionTimer = setTimeout(() => {
+                finalizeQuestion(io, quizCode, lobby);
+              }, newDuration);
+            }
+          }
+
+          socket.emit("powerup-used", {
+            powerupId,
+            type: powerupType,
+            effect: { newEndsAt: lobby.questionEndsAt },
+          });
+
+          // Notify all players about the time extension (optional)
+          io.to(quizCode).emit("time-extended", {
+            userId,
+            playerName: participant.name,
+            newEndsAt: lobby.questionEndsAt,
+          });
+        }
+      } else if (powerupType === 'double-points') {
+        // Set flag for double points on this question
+        const activeEffects = lobby.activePowerupEffects.get(userId) || {};
+        activeEffects.doublePoints = true;
+        lobby.activePowerupEffects.set(userId, activeEffects);
+
+        socket.emit("powerup-used", {
+          powerupId,
+          type: powerupType,
+          effect: { doublePoints: true },
+        });
+      } else if (powerupType === 'shield') {
+        // Set flag for shield on this question
+        const activeEffects = lobby.activePowerupEffects.get(userId) || {};
+        activeEffects.shield = true;
+        lobby.activePowerupEffects.set(userId, activeEffects);
+
+        socket.emit("powerup-used", {
+          powerupId,
+          type: powerupType,
+          effect: { shield: true },
+        });
       }
     });
 

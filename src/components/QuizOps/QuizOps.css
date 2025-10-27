@@ -82,6 +82,25 @@ p{
     box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
 }
 
+/* Eliminated option styles (50-50 powerup) */
+.btn1.eliminated, .btn2.eliminated, .btn3.eliminated, .btn4.eliminated {
+    background-color: rgba(100, 100, 100, 0.3) !important;
+    opacity: 0.4;
+    text-decoration: line-through;
+    cursor: not-allowed;
+    position: relative;
+}
+
+.eliminated-mark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 3em;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
 /* Firecracker animation styles */
 .firecracker-container {
     position: fixed;

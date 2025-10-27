@@ -14,6 +14,9 @@ import {
 import QuizOps from "@/components/QuizOps/QuizOps";
 import { toaster } from "@/components/ui/toaster";
 import { MdWarning } from "react-icons/md";
+import PowerupBar from "@/components/PowerupBar/PowerupBar";
+import PowerupGrantAnimation from "@/components/PowerupBar/PowerupGrantAnimation";
+import type { Powerup } from "@/types/powerups";
 import "./LiveQuiz.css";
 
 interface Participant {
@@ -198,6 +201,15 @@ const LiveQuiz = () => {
     []
   );
   const [animatingScores, setAnimatingScores] = useState(false);
+  
+  // Powerup state
+  const [playerPowerups, setPlayerPowerups] = useState<Powerup[]>([]);
+  const [showPowerupGrant, setShowPowerupGrant] = useState<Powerup | null>(null);
+  const [eliminatedOptions, setEliminatedOptions] = useState<number[]>([]);
+  const [activePowerupEffects, setActivePowerupEffects] = useState<{
+    doublePoints?: boolean;
+    shield?: boolean;
+  }>({});
 
   useEffect(() => {
     if (!quizCode) {
@@ -376,6 +388,10 @@ const LiveQuiz = () => {
         setQuestionEndsAt(endsAt);
         setTimeRemaining(Math.max(0, Math.ceil((endsAt - Date.now()) / 1000)));
         setTimeLimit(limit);
+        
+        // Reset powerup effects for new question
+        setEliminatedOptions([]);
+        setActivePowerupEffects({});
       }
     );
 
@@ -483,6 +499,70 @@ const LiveQuiz = () => {
       });
     });
 
+    // Powerup event listeners
+    socket.on("powerups-sync", ({ powerups }: { powerups: Powerup[] }) => {
+      setPlayerPowerups(powerups);
+    });
+
+    socket.on("powerup-granted", ({ powerup, allPowerups }: { powerup: Powerup; allPowerups: Powerup[] }) => {
+      setShowPowerupGrant(powerup);
+      setPlayerPowerups(allPowerups);
+      
+      // Play celebration sound if available
+      try {
+        const audio = new Audio('/powerup-grant.mp3');
+        audio.volume = 0.3;
+        audio.play().catch(() => {
+          // Ignore audio errors
+        });
+      } catch (e) {
+        // Ignore audio errors
+      }
+    });
+
+    socket.on("powerup-used", ({ type, effect }: { powerupId: string; type: string; effect: any }) => {
+      if (type === '50-50' && effect.eliminatedOptions) {
+        setEliminatedOptions(effect.eliminatedOptions);
+      } else if (type === 'time-freeze' && effect.newEndsAt) {
+        setQuestionEndsAt(effect.newEndsAt);
+      } else if (type === 'double-points') {
+        setActivePowerupEffects(prev => ({ ...prev, doublePoints: true }));
+        toaster.create({
+          title: "Double Points Active!",
+          description: "You'll earn 2x points for this question",
+          type: "success",
+          duration: 3000,
+        });
+      } else if (type === 'shield') {
+        setActivePowerupEffects(prev => ({ ...prev, shield: true }));
+        toaster.create({
+          title: "Shield Active!",
+          description: "You're protected from negative points",
+          type: "success",
+          duration: 3000,
+        });
+      }
+    });
+
+    socket.on("powerup-use-rejected", ({ reason }: { reason: string }) => {
+      toaster.create({
+        title: "Powerup Failed",
+        description: reason,
+        type: "error",
+        duration: 3000,
+      });
+    });
+
+    socket.on("time-extended", ({ playerName, newEndsAt }: { playerName: string; newEndsAt: number }) => {
+      setQuestionEndsAt(newEndsAt);
+      toaster.create({
+        title: "Time Extended!",
+        description: `${playerName} used Time Freeze! +15 seconds`,
+        type: "info",
+        duration: 3000,
+      });
+    });
+
     return () => {
       socket.emit("leave-lobby");
       socket.disconnect();
@@ -555,6 +635,11 @@ const LiveQuiz = () => {
       return;
     }
 
+    // Check if option is eliminated by 50-50 powerup
+    if (eliminatedOptions.includes(index)) {
+      return;
+    }
+
     if (currentQuestion.answerType === "single") {
       setSelectedAnswers([index]);
       submitAnswer([index]);
@@ -576,6 +661,47 @@ const LiveQuiz = () => {
       return;
     }
     submitAnswer(selectedAnswers);
+  };
+
+  const handleUsePowerup = (powerupId: string) => {
+    if (!socketRef.current) {
+      return;
+    }
+
+    const powerup = playerPowerups.find(p => p.id === powerupId);
+    if (!powerup) {
+      return;
+    }
+
+    // Can only use powerups during question phase
+    if (phase !== "question") {
+      toaster.create({
+        title: "Cannot Use Powerup",
+        description: "Powerups can only be used during questions",
+        type: "warning",
+        duration: 3000,
+      });
+      return;
+    }
+
+    // Can't use powerups after submitting
+    if (hasSubmitted) {
+      toaster.create({
+        title: "Cannot Use Powerup",
+        description: "You've already submitted your answer",
+        type: "warning",
+        duration: 3000,
+      });
+      return;
+    }
+
+    socketRef.current.emit("use-powerup", {
+      powerupId,
+      powerupType: powerup.type,
+    });
+
+    // Remove powerup from local state immediately for smooth UX
+    setPlayerPowerups(prev => prev.filter(p => p.id !== powerupId));
   };
 
   const playersReady = participants.length;
@@ -764,6 +890,28 @@ const LiveQuiz = () => {
 
           {viewingQuestion && (
             <div className="question-wrapper">
+              {/* Active powerup effects indicator */}
+              {(activePowerupEffects.doublePoints || activePowerupEffects.shield) && (
+                <div style={{ 
+                  display: 'flex', 
+                  gap: '10px', 
+                  marginBottom: '10px', 
+                  justifyContent: 'center',
+                  flexWrap: 'wrap'
+                }}>
+                  {activePowerupEffects.doublePoints && (
+                    <Badge colorPalette="yellow" size="lg" style={{ fontSize: '14px', padding: '8px 12px' }}>
+                      ⭐ Double Points Active!
+                    </Badge>
+                  )}
+                  {activePowerupEffects.shield && (
+                    <Badge colorPalette="green" size="lg" style={{ fontSize: '14px', padding: '8px 12px' }}>
+                      🛡️ Shield Active!
+                    </Badge>
+                  )}
+                </div>
+              )}
+              
               <QuizOps
                 question={currentQuestion.text}
                 type={currentQuestion.answerType}
@@ -775,6 +923,7 @@ const LiveQuiz = () => {
                 disableInteractions={hasSubmitted}
                 timeRemaining={timeRemaining}
                 totalTime={timeLimit}
+                eliminatedOptions={eliminatedOptions}
               />
 
               {currentQuestion.answerType === "multiple" && (
@@ -1024,6 +1173,23 @@ const LiveQuiz = () => {
           </div>
         </aside>
       </main>
+      
+      {/* Powerup Bar - show during question phase and not in supervisor mode */}
+      {!supervisorMode && phase === "question" && playerPowerups.length > 0 && (
+        <PowerupBar
+          powerups={playerPowerups}
+          onUsePowerup={handleUsePowerup}
+          disabled={hasSubmitted}
+        />
+      )}
+      
+      {/* Powerup Grant Animation */}
+      {showPowerupGrant && (
+        <PowerupGrantAnimation
+          powerup={showPowerupGrant}
+          onComplete={() => setShowPowerupGrant(null)}
+        />
+      )}
     </div>
   );
 };

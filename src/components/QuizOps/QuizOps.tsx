@@ -14,6 +14,7 @@ interface Props {
   timeRemaining?: number | null;
   totalTime?: number | null;
   correctAnswers?: number[];
+  eliminatedOptions?: number[];
 }
 
 const QuizOps = ({
@@ -29,6 +30,7 @@ const QuizOps = ({
   timeRemaining = null,
   totalTime = null,
   correctAnswers,
+  eliminatedOptions = [],
 }: Props) => {
   const [showFirecrackers, setShowFirecrackers] = useState(false);
 
@@ -71,7 +73,10 @@ const QuizOps = ({
   const getButtonClass = (index: number) => {
     let baseClass = `btn${index + 1}`;
 
-    if (showFeedback) {
+    // Check if option is eliminated
+    if (eliminatedOptions.includes(index)) {
+      baseClass += " eliminated";
+    } else if (showFeedback) {
       const isCorrectAnswer = correctAnswers?.includes(index);
       if (isCorrectAnswer) {
         baseClass += " correct";
@@ -145,7 +150,7 @@ const QuizOps = ({
           <button
             className={getButtonClass(0)}
             onClick={() => handleOptionClick(0)}
-            disabled={showFeedback || disableInteractions}
+            disabled={showFeedback || disableInteractions || eliminatedOptions.includes(0)}
           >
             {type !== "single" && (
               <input
@@ -156,12 +161,13 @@ const QuizOps = ({
                 readOnly
               />
             )}
+            {eliminatedOptions.includes(0) && <span className="eliminated-mark">✂️</span>}
             {options[0]}
           </button>
           <button
             className={getButtonClass(1)}
             onClick={() => handleOptionClick(1)}
-            disabled={showFeedback || disableInteractions}
+            disabled={showFeedback || disableInteractions || eliminatedOptions.includes(1)}
           >
             {type !== "single" && (
               <input
@@ -172,12 +178,13 @@ const QuizOps = ({
                 readOnly
               />
             )}
+            {eliminatedOptions.includes(1) && <span className="eliminated-mark">✂️</span>}
             {options[1]}
           </button>
           <button
             className={getButtonClass(2)}
             onClick={() => handleOptionClick(2)}
-            disabled={showFeedback || disableInteractions}
+            disabled={showFeedback || disableInteractions || eliminatedOptions.includes(2)}
           >
             {type !== "single" && (
               <input
@@ -188,12 +195,13 @@ const QuizOps = ({
                 readOnly
               />
             )}
+            {eliminatedOptions.includes(2) && <span className="eliminated-mark">✂️</span>}
             {options[2]}
           </button>
           <button
             className={getButtonClass(3)}
             onClick={() => handleOptionClick(3)}
-            disabled={showFeedback || disableInteractions}
+            disabled={showFeedback || disableInteractions || eliminatedOptions.includes(3)}
           >
             {type !== "single" && (
               <input
@@ -204,6 +212,7 @@ const QuizOps = ({
                 readOnly
               />
             )}
+            {eliminatedOptions.includes(3) && <span className="eliminated-mark">✂️</span>}
             {options[3]}
           </button>
         </div>

@@ -386,7 +386,9 @@ const LiveQuiz = () => {
         setAnswerFeedback(null);
         setLastSummary([]);
         setQuestionEndsAt(endsAt);
-        setTimeRemaining(Math.max(0, Math.ceil((endsAt - Date.now()) / 1000)));
+        // Use the timeLimit directly instead of calculating from endsAt
+        // to avoid network latency differences between players
+        setTimeRemaining(limit);
         setTimeLimit(limit);
         
         // Reset powerup effects for new question

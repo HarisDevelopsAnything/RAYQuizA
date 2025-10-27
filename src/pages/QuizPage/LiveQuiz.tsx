@@ -202,6 +202,9 @@ const LiveQuiz = () => {
   );
   const [animatingScores, setAnimatingScores] = useState(false);
   
+  // Server time offset to sync with server clock
+  const [serverTimeOffset, setServerTimeOffset] = useState<number>(0);
+  
   // Powerup state
   const [playerPowerups, setPlayerPowerups] = useState<Powerup[]>([]);
   const [showPowerupGrant, setShowPowerupGrant] = useState<Powerup | null>(null);
@@ -378,6 +381,14 @@ const LiveQuiz = () => {
         endsAt: number;
         timeLimit: number;
       }) => {
+        // Calculate server time offset when question starts
+        // This syncs our local clock with the server's clock
+        const clientReceiveTime = Date.now();
+        const calculatedOffset = endsAt - limit * 1000 - clientReceiveTime;
+        setServerTimeOffset(calculatedOffset);
+        
+        console.log(`[Time Sync] Server offset: ${calculatedOffset}ms, Server endsAt: ${endsAt}, Local time: ${clientReceiveTime}`);
+        
         setPhase("question");
         setQuestionIndex(index);
         setCurrentQuestion(question);
@@ -386,8 +397,7 @@ const LiveQuiz = () => {
         setAnswerFeedback(null);
         setLastSummary([]);
         setQuestionEndsAt(endsAt);
-        // Use the timeLimit directly instead of calculating from endsAt
-        // to avoid network latency differences between players
+        // Use the timeLimit directly for initial display
         setTimeRemaining(limit);
         setTimeLimit(limit);
         
@@ -577,15 +587,17 @@ const LiveQuiz = () => {
     }
 
     const updateRemaining = () => {
+      // Use server time by adding the offset to our local time
+      const serverTime = Date.now() + serverTimeOffset;
       setTimeRemaining(
-        Math.max(0, Math.ceil((questionEndsAt - Date.now()) / 1000))
+        Math.max(0, Math.ceil((questionEndsAt - serverTime) / 1000))
       );
     };
 
     updateRemaining();
     const timerId = window.setInterval(updateRemaining, 500);
     return () => window.clearInterval(timerId);
-  }, [questionEndsAt]);
+  }, [questionEndsAt, serverTimeOffset]);
 
   const sortedScoreboard = useMemo(() => {
     return [...scoreboard].sort((a, b) => b.score - a.score);

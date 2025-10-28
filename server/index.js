@@ -1,4 +1,5 @@
-// server/index.ts
+// server/index.js
+import 'dotenv/config';
 import express from "express";
 import cors from "cors";
 import { createServer } from "http";
@@ -8,8 +9,22 @@ import { setupRealtime } from "./socket-server.js";
 import { OAuth2Client } from "google-auth-library";
 import aiQuizRoutes from "./ai-quiz-routes.js";
 
+console.log("🚀 Starting RAYQuizA Backend Server...");
+console.log("📡 CORS Origins:", process.env.CORS_ORIGINS || "Using defaults");
+
 const app = express();
-app.use(cors());
+
+// CORS configuration - match Socket.IO origins
+const allowedOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(",").map((origin) => origin.trim())
+  : ["http://localhost:5173", "http://localhost:3000", "http://localhost:5174", "https://rayquiza-frontend.onrender.com"];
+
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true,
+  optionsSuccessStatus: 200
+}));
 app.use(express.json()); // Required for POST JSON parsing
 
 // Google OAuth client
@@ -20,15 +35,29 @@ const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CORS_ORIGINS
-      ? process.env.CORS_ORIGINS.split(",").map((origin) => origin.trim())
-      : ["http://localhost:5173", "http://localhost:3000", "https://rayquiza-frontend.onrender.com"],
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true,
   },
+  allowEIO3: true, // Allow Engine.IO v3 clients (backwards compatibility)
+  transports: ['polling', 'websocket'], // Enable both transports
 });
 
 setupRealtime(io);
+
+// Health check endpoint
+app.get("/", (req, res) => {
+  res.json({ 
+    status: "ok", 
+    message: "RAYQuizA Backend Server",
+    cors: allowedOrigins 
+  });
+});
+
+// Socket.IO health check
+app.get("/socket.io/health", (req, res) => {
+  res.json({ status: "ok", message: "Socket.IO server is running" });
+});
 
 // Mount AI quiz generation routes
 app.use('/api', aiQuizRoutes);

@@ -180,8 +180,8 @@ const LiveQuiz = () => {
   const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
-  const [questionEndsAt, setQuestionEndsAt] = useState<number | null>(null);
   const [timeLimit, setTimeLimit] = useState<number | null>(null);
+  const [questionStartedAt, setQuestionStartedAt] = useState<number | null>(null);
   const [answerFeedback, setAnswerFeedback] = useState<{
     isCorrect: boolean;
     gained: number;
@@ -202,9 +202,6 @@ const LiveQuiz = () => {
   );
   const [animatingScores, setAnimatingScores] = useState(false);
   
-  // Server time offset to sync with server clock
-  const [serverTimeOffset, setServerTimeOffset] = useState<number>(0);
-  
   // Powerup state
   const [playerPowerups, setPlayerPowerups] = useState<Powerup[]>([]);
   const [showPowerupGrant, setShowPowerupGrant] = useState<Powerup | null>(null);
@@ -213,41 +210,6 @@ const LiveQuiz = () => {
     doublePoints?: boolean;
     shield?: boolean;
   }>({});
-
-  // Time synchronization function using NTP-like approach
-  const syncTimeWithServer = async (socket: Socket) => {
-    const samples: number[] = [];
-    const numSamples = 5; // Take multiple samples for accuracy
-
-    for (let i = 0; i < numSamples; i++) {
-      const clientSendTime = Date.now();
-      
-      await new Promise<void>((resolve) => {
-        socket.emit("time-sync-ping", clientSendTime, (response: { serverTime: number; clientSendTime: number }) => {
-          const clientReceiveTime = Date.now();
-          const roundTripTime = clientReceiveTime - clientSendTime;
-          const estimatedServerTimeAtReceive = response.serverTime + roundTripTime / 2;
-          const offset = estimatedServerTimeAtReceive - clientReceiveTime;
-          
-          samples.push(offset);
-          console.log(`[Time Sync ${i + 1}/${numSamples}] RTT: ${roundTripTime}ms, Offset: ${offset}ms`);
-          resolve();
-        });
-      });
-
-      // Small delay between samples
-      if (i < numSamples - 1) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-    }
-
-    // Use median offset to avoid outliers from network jitter
-    samples.sort((a, b) => a - b);
-    const medianOffset = samples[Math.floor(samples.length / 2)];
-    
-    setServerTimeOffset(medianOffset);
-    console.log(`[Time Sync Complete] Median offset: ${medianOffset}ms (samples: ${samples.join(', ')})`);
-  };
 
   useEffect(() => {
     if (!quizCode) {
@@ -278,9 +240,6 @@ const LiveQuiz = () => {
     socket.on("connect", () => {
       setSocketConnected(true);
       setClientSocketId(socket.id ?? null);
-
-      // Perform time synchronization immediately after connection
-      syncTimeWithServer(socket);
 
       // Detect connection type
       const transport = socket.io.engine.transport.name;
@@ -411,27 +370,13 @@ const LiveQuiz = () => {
       ({
         questionIndex: index,
         question,
-        endsAt,
-        serverTime,
         timeLimit: limit,
       }: {
         questionIndex: number;
         question: QuestionPayload;
-        endsAt: number;
-        serverTime: number;
         timeLimit: number;
       }) => {
-        // We already have accurate offset from initial sync, 
-        // but update it with current server time for extra precision
-        const clientReceiveTime = Date.now();
-        const instantOffset = serverTime - clientReceiveTime;
-        
-        // Blend the pre-calculated offset with instant offset (weighted average)
-        // This accounts for any drift while maintaining accuracy
-        const blendedOffset = serverTimeOffset * 0.7 + instantOffset * 0.3;
-        setServerTimeOffset(blendedOffset);
-        
-        console.log(`[Question Start] Initial offset: ${serverTimeOffset}ms, Instant: ${instantOffset}ms, Blended: ${blendedOffset.toFixed(2)}ms`);
+        console.log(`[Question Start] Duration: ${limit} seconds`);
         
         setPhase("question");
         setQuestionIndex(index);
@@ -440,8 +385,8 @@ const LiveQuiz = () => {
         setHasSubmitted(false);
         setAnswerFeedback(null);
         setLastSummary([]);
-        setQuestionEndsAt(endsAt);
-        // Use the timeLimit directly for initial display
+        setQuestionStartedAt(Date.now());
+        // Set initial time remaining to the full duration
         setTimeRemaining(limit);
         setTimeLimit(limit);
         
@@ -475,7 +420,7 @@ const LiveQuiz = () => {
         setTimeout(() => setAnimatingScores(false), 600);
 
         setLastSummary(summary);
-        setQuestionEndsAt(null);
+        setQuestionStartedAt(null);
         setTimeRemaining(0);
         setTimeLimit(null);
 
@@ -525,7 +470,7 @@ const LiveQuiz = () => {
         setPhase("complete");
         setScoreboard(entries);
         setCurrentQuestion(null);
-        setQuestionEndsAt(null);
+        setQuestionStartedAt(null);
         setTimeRemaining(0);
         setTimeLimit(null);
 
@@ -544,7 +489,7 @@ const LiveQuiz = () => {
     socket.on("quiz-cancelled", ({ reason }: { reason: string }) => {
       setPhase("complete");
       setCurrentQuestion(null);
-      setQuestionEndsAt(null);
+      setQuestionStartedAt(null);
       setTimeRemaining(0);
       setTimeLimit(null);
       toaster.create({
@@ -579,8 +524,10 @@ const LiveQuiz = () => {
     socket.on("powerup-used", ({ type, effect }: { powerupId: string; type: string; effect: any }) => {
       if (type === '50-50' && effect.eliminatedOptions) {
         setEliminatedOptions(effect.eliminatedOptions);
-      } else if (type === 'time-freeze' && effect.newEndsAt) {
-        setQuestionEndsAt(effect.newEndsAt);
+      } else if (type === 'time-freeze' && effect.additionalSeconds) {
+        // Add the additional time to our local countdown
+        setTimeLimit(prev => prev ? prev + effect.additionalSeconds : effect.additionalSeconds);
+        setTimeRemaining(prev => prev + effect.additionalSeconds);
       } else if (type === 'double-points') {
         setActivePowerupEffects(prev => ({ ...prev, doublePoints: true }));
         toaster.create({
@@ -609,11 +556,13 @@ const LiveQuiz = () => {
       });
     });
 
-    socket.on("time-extended", ({ playerName, newEndsAt }: { playerName: string; newEndsAt: number }) => {
-      setQuestionEndsAt(newEndsAt);
+    socket.on("time-extended", ({ playerName, additionalSeconds }: { playerName: string; additionalSeconds: number }) => {
+      // Add the additional time to our local countdown
+      setTimeLimit(prev => prev ? prev + additionalSeconds : additionalSeconds);
+      setTimeRemaining(prev => prev + additionalSeconds);
       toaster.create({
         title: "Time Extended!",
-        description: `${playerName} used Time Freeze! +15 seconds`,
+        description: `${playerName} used Time Freeze! +${additionalSeconds} seconds`,
         type: "info",
         duration: 3000,
       });
@@ -626,22 +575,20 @@ const LiveQuiz = () => {
   }, [navigate, quizCode, requestedHost]);
 
   useEffect(() => {
-    if (!questionEndsAt) {
+    if (phase !== "question" || timeLimit === null || questionStartedAt === null) {
       return;
     }
 
     const updateRemaining = () => {
-      // Use server time by adding the offset to our local time
-      const serverTime = Date.now() + serverTimeOffset;
-      setTimeRemaining(
-        Math.max(0, Math.ceil((questionEndsAt - serverTime) / 1000))
-      );
+      const elapsed = (Date.now() - questionStartedAt) / 1000; // seconds elapsed
+      const remaining = Math.max(0, Math.ceil(timeLimit - elapsed));
+      setTimeRemaining(remaining);
     };
 
     updateRemaining();
-    const timerId = window.setInterval(updateRemaining, 500);
+    const timerId = window.setInterval(updateRemaining, 100); // Update every 100ms for smooth countdown
     return () => window.clearInterval(timerId);
-  }, [questionEndsAt, serverTimeOffset]);
+  }, [phase, timeLimit, questionStartedAt]);
 
   const sortedScoreboard = useMemo(() => {
     return [...scoreboard].sort((a, b) => b.score - a.score);

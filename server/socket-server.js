@@ -178,11 +178,11 @@ const startQuestion = (io, quizCode, lobby, index) => {
   const question = lobby.quiz.questions[index];
   const durationSeconds = Math.max(5, Number(question.timeLimit || question.timing || 30));
 
-  const serverNow = Date.now(); // Capture server time once
+  const serverNow = Date.now();
   lobby.started = true;
   lobby.currentQuestionIndex = index;
   lobby.questionEndsAt = serverNow + durationSeconds * 1000;
-  lobby.questionStartTime = serverNow; // Track when question started
+  lobby.questionStartTime = serverNow; // Track when question started for time bonus calculations
   lobby.answers.clear();
   lobby.lastActivity = serverNow;
 
@@ -192,6 +192,7 @@ const startQuestion = (io, quizCode, lobby, index) => {
     finalizeQuestion(io, quizCode, lobby);
   }, durationSeconds * 1000);
 
+  // Send question with duration, not end timestamp
   io.to(quizCode).emit("question-start", {
     quizCode,
     questionIndex: index,
@@ -204,9 +205,7 @@ const startQuestion = (io, quizCode, lobby, index) => {
       points: Number(question.points ?? 1),
       negativePoints: Number(question.negativePoints ?? 0),
     },
-    endsAt: lobby.questionEndsAt,
-    serverTime: serverNow, // Send current server time for synchronization
-    timeLimit: durationSeconds,
+    timeLimit: durationSeconds, // Send duration in seconds
   });
 };
 
@@ -254,7 +253,7 @@ const grantRandomPowerup = (lobby, userId) => {
 
 // Check if player is eligible for powerup grant
 const checkPowerupEligibility = (lobby, userId, isCorrect, timeBonus) => {
-  if (!isCorrect || timeBonus < 2.0) {
+  if (!isCorrect || timeBonus < 1.5) {
     // Not a fast correct answer, reset streak
     if (lobby.powerupStats.has(userId)) {
       lobby.powerupStats.set(userId, { fastCorrectStreak: 0 });
@@ -502,12 +501,6 @@ const removeParticipant = (io, quizCode, lobby, socketId) => {
 const setupRealtime = (io) => {
   io.on("connection", (socket) => {
     socket.data.quizCode = null;
-
-    // Time synchronization handler - responds immediately with server time
-    socket.on("time-sync-ping", (clientSendTime, callback) => {
-      const serverTime = Date.now();
-      callback({ serverTime, clientSendTime });
-    });
 
     socket.on("join-lobby", async ({ quizCode, player }) => {
       const normalizedCode = normalizeCode(quizCode);
@@ -849,8 +842,9 @@ const setupRealtime = (io) => {
         }
       } else if (powerupType === 'time-freeze') {
         // Add 15 seconds to the timer
+        const ADDITIONAL_SECONDS = 15;
         if (lobby.questionEndsAt) {
-          lobby.questionEndsAt += 15000; // Add 15 seconds
+          lobby.questionEndsAt += ADDITIONAL_SECONDS * 1000; // Add 15 seconds to server deadline
           
           // Also extend the timer
           if (lobby.questionTimer) {
@@ -866,14 +860,14 @@ const setupRealtime = (io) => {
           socket.emit("powerup-used", {
             powerupId,
             type: powerupType,
-            effect: { newEndsAt: lobby.questionEndsAt },
+            effect: { additionalSeconds: ADDITIONAL_SECONDS },
           });
 
-          // Notify all players about the time extension (optional)
+          // Notify all players about the time extension
           io.to(quizCode).emit("time-extended", {
             userId,
             playerName: participant.name,
-            newEndsAt: lobby.questionEndsAt,
+            additionalSeconds: ADDITIONAL_SECONDS,
           });
         }
       } else if (powerupType === 'double-points') {

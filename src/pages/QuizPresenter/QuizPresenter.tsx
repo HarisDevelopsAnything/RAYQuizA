@@ -23,6 +23,7 @@ interface Quiz {
   description: string;
   code: string;
   questions: Question[];
+  corporateMode?: boolean;
 }
 
 const QuizPresenter = () => {

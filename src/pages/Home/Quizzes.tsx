@@ -34,6 +34,7 @@ type Quiz = {
   categories: string[];
   code: string;
   createdBy: string;
+  corporateMode?: boolean;
   questions?: Array<{
     question: string;
     type: "text" | "image";
@@ -245,6 +246,7 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
               name={quiz.title}
               desc={quiz.description || "No description available"}
               duration={durationText}
+              corporateMode={quiz.corporateMode}
               isDeleting={deletingQuizId === quiz._id}
               onClickTakeQuiz={() => {
                 // Navigate to live quiz as host

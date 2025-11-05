@@ -45,6 +45,7 @@ const CreateQuiz = () => {
   const [categories, setCategories] = React.useState<string[]>([]);
   const [newCategory, setNewCategory] = React.useState("");
   const [isAIModalOpen, setIsAIModalOpen] = React.useState(false);
+  const [corporateMode, setCorporateMode] = React.useState(false);
   const [questions, setQuestions] = React.useState<QuestionType[]>([
     {
       question: "",
@@ -178,6 +179,7 @@ const CreateQuiz = () => {
         createdBy: userName,
         createdByEmail: userEmail,
         questions: questions,
+        corporateMode: corporateMode,
       };
 
       const response = await fetch(
@@ -204,6 +206,7 @@ const CreateQuiz = () => {
         setDescription("");
         setCategories([]);
         setNewCategory("");
+        setCorporateMode(false);
         setQuestions([
           {
             question: "",
@@ -337,6 +340,23 @@ const CreateQuiz = () => {
               <CgAdd />
             </Button>
           </Flex>
+          
+          <Box mt={4} p={3} borderWidth="1px" borderRadius="md" bg="bg.subtle">
+            <Flex alignItems="center" gap={3}>
+              <input
+                type="checkbox"
+                checked={corporateMode}
+                onChange={(e) => setCorporateMode(e.target.checked)}
+                style={{ width: "20px", height: "20px", cursor: "pointer" }}
+              />
+              <Box>
+                <Text fontWeight="bold">Enable Corporate Mode</Text>
+                <Text fontSize="sm" color="gray.600" _dark={{ color: "gray.400" }}>
+                  For formal assessments: Reduced colors, no powerups, professional interface
+                </Text>
+              </Box>
+            </Flex>
+          </Box>
           {categories.length > 0 && (
             <Flex wrap="wrap" gap={2} mb={2}>
               {categories.map((category, index) => (

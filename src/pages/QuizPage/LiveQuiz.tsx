@@ -47,6 +47,7 @@ interface QuizMeta {
   title: string;
   description?: string;
   totalQuestions: number;
+  corporateMode?: boolean;
 }
 
 interface QuestionSummary {
@@ -720,7 +721,7 @@ const LiveQuiz = () => {
   }, [lastSummary]);
 
   return (
-    <div className="live-page">
+    <div className={`live-page ${quizMeta?.corporateMode ? 'corporate-mode' : ''}`}>
       {/* Connection Warning Modal */}
       {showConnectionWarning &&
         !acknowledgedWarning &&
@@ -895,8 +896,8 @@ const LiveQuiz = () => {
 
           {viewingQuestion && (
             <div className="question-wrapper">
-              {/* Active powerup effects indicator */}
-              {(activePowerupEffects.doublePoints || activePowerupEffects.shield) && (
+              {/* Active powerup effects indicator - hidden in corporate mode */}
+              {!quizMeta?.corporateMode && (activePowerupEffects.doublePoints || activePowerupEffects.shield) && (
                 <div style={{ 
                   display: 'flex', 
                   gap: '10px', 
@@ -1179,8 +1180,8 @@ const LiveQuiz = () => {
         </aside>
       </main>
       
-      {/* Powerup Bar - show during question phase and not in supervisor mode */}
-      {!supervisorMode && phase === "question" && playerPowerups.length > 0 && (
+      {/* Powerup Bar - show during question phase and not in supervisor mode or corporate mode */}
+      {!supervisorMode && !quizMeta?.corporateMode && phase === "question" && playerPowerups.length > 0 && (
         <PowerupBar
           powerups={playerPowerups}
           onUsePowerup={handleUsePowerup}
@@ -1188,8 +1189,8 @@ const LiveQuiz = () => {
         />
       )}
       
-      {/* Powerup Grant Animation */}
-      {showPowerupGrant && (
+      {/* Powerup Grant Animation - hidden in corporate mode */}
+      {!quizMeta?.corporateMode && showPowerupGrant && (
         <PowerupGrantAnimation
           powerup={showPowerupGrant}
           onComplete={() => setShowPowerupGrant(null)}

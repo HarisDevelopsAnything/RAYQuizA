@@ -253,6 +253,11 @@ const grantRandomPowerup = (lobby, userId) => {
 
 // Check if player is eligible for powerup grant
 const checkPowerupEligibility = (lobby, userId, isCorrect, timeBonus) => {
+  // Skip powerups if quiz is in corporate mode
+  if (lobby.quiz?.corporateMode) {
+    return null;
+  }
+  
   if (!isCorrect || timeBonus < 1.5) {
     // Not a fast correct answer, reset streak
     if (lobby.powerupStats.has(userId)) {
@@ -567,6 +572,7 @@ const setupRealtime = (io) => {
           title: lobby.quiz.title,
           description: lobby.quiz.description || "",
           totalQuestions: Array.isArray(lobby.quiz.questions) ? lobby.quiz.questions.length : 0,
+          corporateMode: lobby.quiz.corporateMode || false,
           supervisorMode: true,
         });
 
@@ -622,6 +628,7 @@ const setupRealtime = (io) => {
         title: lobby.quiz.title,
         description: lobby.quiz.description || "",
         totalQuestions: Array.isArray(lobby.quiz.questions) ? lobby.quiz.questions.length : 0,
+        corporateMode: lobby.quiz.corporateMode || false,
       });
 
       if (isHost) {
@@ -794,6 +801,12 @@ const setupRealtime = (io) => {
 
       const lobby = lobbies.get(quizCode);
       if (!lobby) {
+        return;
+      }
+
+      // Reject powerup usage in corporate mode
+      if (lobby.quiz?.corporateMode) {
+        socket.emit("powerup-use-rejected", { reason: "Powerups are disabled in corporate mode" });
         return;
       }
 

@@ -289,6 +289,69 @@
   }
 }
 
+/* Corporate Mode Styles - Reduced colors, professional appearance */
+.live-page.corporate-mode {
+  background: linear-gradient(135deg, #e5e7eb 0%, #f3f4f6 100%);
+  color: #1f2937;
+}
+
+.live-page.corporate-mode .live-header {
+  background: rgba(55, 65, 81, 0.95);
+  border-bottom: 1px solid rgba(209, 213, 219, 0.4);
+}
+
+.live-page.corporate-mode .live-header h1 {
+  color: #f9fafb;
+}
+
+.live-page.corporate-mode .live-subtitle {
+  color: rgba(229, 231, 235, 0.9);
+}
+
+.live-page.corporate-mode .live-main {
+  background: rgba(249, 250, 251, 0.95);
+  border: 1px solid rgba(209, 213, 219, 0.5);
+  color: #1f2937;
+}
+
+.live-page.corporate-mode .participant-list li {
+  background: rgba(243, 244, 246, 0.8);
+  border: 1px solid rgba(209, 213, 219, 0.5);
+  color: #374151;
+}
+
+.live-page.corporate-mode .live-sidebar {
+  color: #1f2937;
+}
+
+.live-page.corporate-mode .live-card {
+  background: rgba(249, 250, 251, 0.95);
+  border: 1px solid rgba(209, 213, 219, 0.5);
+  color: #1f2937;
+}
+
+.live-page.corporate-mode .scoreboard-list li {
+  background: rgba(243, 244, 246, 0.6);
+  border: 1px solid rgba(209, 213, 219, 0.4);
+  color: #374151;
+}
+
+.live-page.corporate-mode .scoreboard-list li.me {
+  border-color: rgba(75, 85, 99, 0.6);
+  background: rgba(229, 231, 235, 0.8);
+  font-weight: 600;
+}
+
+.live-page.corporate-mode .scoreboard-list li.top-player {
+  background: rgba(229, 231, 235, 0.9);
+  border-color: rgba(107, 114, 128, 0.6);
+  box-shadow: 0 4px 12px rgba(107, 114, 128, 0.2);
+}
+
+.live-page.corporate-mode .muted {
+  color: rgba(107, 114, 128, 0.8);
+}
+
 @media (max-width: 1024px) {
   .live-content {
     flex-direction: column;

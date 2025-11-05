@@ -8,6 +8,7 @@ interface Props {
   name: string;
   desc: string;
   duration: string;
+  corporateMode?: boolean;
   onClickTakeQuiz?: () => void;
   onClickViewDetails?: () => void;
   onClickPresent?: () => void;
@@ -19,6 +20,7 @@ const QuizCard = ({
   name,
   desc,
   duration,
+  corporateMode = false,
   onClickTakeQuiz,
   onClickViewDetails,
   onClickPresent,
@@ -49,6 +51,20 @@ const QuizCard = ({
         {desc}
         <br />
         {duration}
+        {corporateMode && (
+          <div style={{ marginTop: '8px' }}>
+            <span style={{ 
+              fontSize: '11px', 
+              padding: '2px 8px', 
+              borderRadius: '4px', 
+              backgroundColor: colorMode === "light" ? "#E5E7EB" : "#374151",
+              color: colorMode === "light" ? "#374151" : "#E5E7EB",
+              fontWeight: 'bold'
+            }}>
+              🏢 CORPORATE MODE
+            </span>
+          </div>
+        )}
       </Card.Body>
       <Card.Footer marginTop="10px" margin="0px" padding="0">
         <VStack width="100%" gap="0">

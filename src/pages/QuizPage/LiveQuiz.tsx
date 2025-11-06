@@ -14,9 +14,11 @@ import {
 import QuizOps from "@/components/QuizOps/QuizOps";
 import { toaster } from "@/components/ui/toaster";
 import { MdWarning } from "react-icons/md";
+import { IoDownload } from "react-icons/io5";
 import PowerupBar from "@/components/PowerupBar/PowerupBar";
 import PowerupGrantAnimation from "@/components/PowerupBar/PowerupGrantAnimation";
 import type { Powerup } from "@/types/powerups";
+import { jsPDF } from "jspdf";
 import "./LiveQuiz.css";
 
 interface Participant {
@@ -182,7 +184,9 @@ const LiveQuiz = () => {
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [timeLimit, setTimeLimit] = useState<number | null>(null);
-  const [questionStartedAt, setQuestionStartedAt] = useState<number | null>(null);
+  const [questionStartedAt, setQuestionStartedAt] = useState<number | null>(
+    null
+  );
   const [answerFeedback, setAnswerFeedback] = useState<{
     isCorrect: boolean;
     gained: number;
@@ -202,10 +206,12 @@ const LiveQuiz = () => {
     []
   );
   const [animatingScores, setAnimatingScores] = useState(false);
-  
+
   // Powerup state
   const [playerPowerups, setPlayerPowerups] = useState<Powerup[]>([]);
-  const [showPowerupGrant, setShowPowerupGrant] = useState<Powerup | null>(null);
+  const [showPowerupGrant, setShowPowerupGrant] = useState<Powerup | null>(
+    null
+  );
   const [eliminatedOptions, setEliminatedOptions] = useState<number[]>([]);
   const [activePowerupEffects, setActivePowerupEffects] = useState<{
     doublePoints?: boolean;
@@ -378,7 +384,7 @@ const LiveQuiz = () => {
         timeLimit: number;
       }) => {
         console.log(`[Question Start] Duration: ${limit} seconds`);
-        
+
         setPhase("question");
         setQuestionIndex(index);
         setCurrentQuestion(question);
@@ -390,7 +396,7 @@ const LiveQuiz = () => {
         // Set initial time remaining to the full duration
         setTimeRemaining(limit);
         setTimeLimit(limit);
-        
+
         // Reset powerup effects for new question
         setEliminatedOptions([]);
         setActivePowerupEffects({});
@@ -506,47 +512,61 @@ const LiveQuiz = () => {
       setPlayerPowerups(powerups);
     });
 
-    socket.on("powerup-granted", ({ powerup, allPowerups }: { powerup: Powerup; allPowerups: Powerup[] }) => {
-      setShowPowerupGrant(powerup);
-      setPlayerPowerups(allPowerups);
-      
-      // Play celebration sound if available
-      try {
-        const audio = new Audio('/powerup-grant.mp3');
-        audio.volume = 0.3;
-        audio.play().catch(() => {
-          // Ignore audio errors
-        });
-      } catch (e) {
-        // Ignore audio errors
-      }
-    });
+    socket.on(
+      "powerup-granted",
+      ({
+        powerup,
+        allPowerups,
+      }: {
+        powerup: Powerup;
+        allPowerups: Powerup[];
+      }) => {
+        setShowPowerupGrant(powerup);
+        setPlayerPowerups(allPowerups);
 
-    socket.on("powerup-used", ({ type, effect }: { powerupId: string; type: string; effect: any }) => {
-      if (type === '50-50' && effect.eliminatedOptions) {
-        setEliminatedOptions(effect.eliminatedOptions);
-      } else if (type === 'time-freeze' && effect.additionalSeconds) {
-        // Add the additional time to our local countdown
-        setTimeLimit(prev => prev ? prev + effect.additionalSeconds : effect.additionalSeconds);
-        setTimeRemaining(prev => prev + effect.additionalSeconds);
-      } else if (type === 'double-points') {
-        setActivePowerupEffects(prev => ({ ...prev, doublePoints: true }));
-        toaster.create({
-          title: "Double Points Active!",
-          description: "You'll earn 2x points for this question",
-          type: "success",
-          duration: 3000,
-        });
-      } else if (type === 'shield') {
-        setActivePowerupEffects(prev => ({ ...prev, shield: true }));
-        toaster.create({
-          title: "Shield Active!",
-          description: "You're protected from negative points",
-          type: "success",
-          duration: 3000,
-        });
+        // Play celebration sound if available
+        try {
+          const audio = new Audio("/powerup-grant.mp3");
+          audio.volume = 0.3;
+          audio.play().catch(() => {
+            // Ignore audio errors
+          });
+        } catch (e) {
+          // Ignore audio errors
+        }
       }
-    });
+    );
+
+    socket.on(
+      "powerup-used",
+      ({ type, effect }: { powerupId: string; type: string; effect: any }) => {
+        if (type === "50-50" && effect.eliminatedOptions) {
+          setEliminatedOptions(effect.eliminatedOptions);
+        } else if (type === "time-freeze" && effect.additionalSeconds) {
+          // Add the additional time to our local countdown
+          setTimeLimit((prev) =>
+            prev ? prev + effect.additionalSeconds : effect.additionalSeconds
+          );
+          setTimeRemaining((prev) => prev + effect.additionalSeconds);
+        } else if (type === "double-points") {
+          setActivePowerupEffects((prev) => ({ ...prev, doublePoints: true }));
+          toaster.create({
+            title: "Double Points Active!",
+            description: "You'll earn 2x points for this question",
+            type: "success",
+            duration: 3000,
+          });
+        } else if (type === "shield") {
+          setActivePowerupEffects((prev) => ({ ...prev, shield: true }));
+          toaster.create({
+            title: "Shield Active!",
+            description: "You're protected from negative points",
+            type: "success",
+            duration: 3000,
+          });
+        }
+      }
+    );
 
     socket.on("powerup-use-rejected", ({ reason }: { reason: string }) => {
       toaster.create({
@@ -557,17 +577,28 @@ const LiveQuiz = () => {
       });
     });
 
-    socket.on("time-extended", ({ playerName, additionalSeconds }: { playerName: string; additionalSeconds: number }) => {
-      // Add the additional time to our local countdown
-      setTimeLimit(prev => prev ? prev + additionalSeconds : additionalSeconds);
-      setTimeRemaining(prev => prev + additionalSeconds);
-      toaster.create({
-        title: "Time Extended!",
-        description: `${playerName} used Time Freeze! +${additionalSeconds} seconds`,
-        type: "info",
-        duration: 3000,
-      });
-    });
+    socket.on(
+      "time-extended",
+      ({
+        playerName,
+        additionalSeconds,
+      }: {
+        playerName: string;
+        additionalSeconds: number;
+      }) => {
+        // Add the additional time to our local countdown
+        setTimeLimit((prev) =>
+          prev ? prev + additionalSeconds : additionalSeconds
+        );
+        setTimeRemaining((prev) => prev + additionalSeconds);
+        toaster.create({
+          title: "Time Extended!",
+          description: `${playerName} used Time Freeze! +${additionalSeconds} seconds`,
+          type: "info",
+          duration: 3000,
+        });
+      }
+    );
 
     return () => {
       socket.emit("leave-lobby");
@@ -576,7 +607,11 @@ const LiveQuiz = () => {
   }, [navigate, quizCode, requestedHost]);
 
   useEffect(() => {
-    if (phase !== "question" || timeLimit === null || questionStartedAt === null) {
+    if (
+      phase !== "question" ||
+      timeLimit === null ||
+      questionStartedAt === null
+    ) {
       return;
     }
 
@@ -623,6 +658,89 @@ const LiveQuiz = () => {
     if (confirmed) {
       socketRef.current.emit("stop-quiz");
     }
+  };
+
+  const downloadQuizResultsPDF = () => {
+    if (!quizMeta || sortedScoreboard.length === 0) return;
+
+    const doc = new jsPDF();
+
+    // Title
+    doc.setFontSize(20);
+    doc.setFont("helvetica", "bold");
+    doc.text("Quiz Results Report", 105, 20, { align: "center" });
+
+    // Quiz Details
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Quiz Title: ${quizMeta.title}`, 20, 35);
+    doc.text(`Quiz Code: ${quizMeta.quizCode}`, 20, 42);
+    doc.text(`Date: ${new Date().toLocaleString()}`, 20, 49);
+    doc.text(`Total Participants: ${sortedScoreboard.length}`, 20, 56);
+
+    if (quizInterrupted) {
+      doc.text(`Status: Stopped by host`, 20, 63);
+    } else {
+      doc.text(`Status: Completed`, 20, 63);
+      doc.text(`Questions: ${quizMeta.totalQuestions}`, 20, 70);
+    }
+
+    // Participants Header
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Participant Rankings:", 20, quizInterrupted ? 75 : 82);
+
+    // Table Header
+    const tableStartY = quizInterrupted ? 85 : 92;
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text("Rank", 20, tableStartY);
+    doc.text("Name", 45, tableStartY);
+    doc.text("Score", 180, tableStartY);
+
+    // Draw line under header
+    doc.line(20, tableStartY + 2, 190, tableStartY + 2);
+
+    // Participants List
+    doc.setFont("helvetica", "normal");
+    let yPosition = tableStartY + 10;
+
+    sortedScoreboard.forEach((entry, index) => {
+      if (yPosition > 270) {
+        doc.addPage();
+        yPosition = 20;
+      }
+
+      const rank = `#${index + 1}`;
+      const name = entry.name.substring(0, 50);
+      const score = `${entry.score.toFixed(2)} pts`;
+
+      doc.text(rank, 20, yPosition);
+      doc.text(name, 45, yPosition);
+      doc.text(score, 180, yPosition);
+
+      yPosition += 7;
+    });
+
+    // Footer
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "italic");
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.text(
+        `Generated on ${new Date().toLocaleString()} - Page ${i} of ${pageCount}`,
+        105,
+        290,
+        { align: "center" }
+      );
+    }
+
+    // Save PDF
+    const fileName = `${quizMeta.title.replace(/[^a-z0-9]/gi, "_")}_${
+      quizMeta.quizCode
+    }_Results.pdf`;
+    doc.save(fileName);
   };
 
   const submitAnswer = (answers: number[]) => {
@@ -674,7 +792,7 @@ const LiveQuiz = () => {
       return;
     }
 
-    const powerup = playerPowerups.find(p => p.id === powerupId);
+    const powerup = playerPowerups.find((p) => p.id === powerupId);
     if (!powerup) {
       return;
     }
@@ -707,7 +825,7 @@ const LiveQuiz = () => {
     });
 
     // Remove powerup from local state immediately for smooth UX
-    setPlayerPowerups(prev => prev.filter(p => p.id !== powerupId));
+    setPlayerPowerups((prev) => prev.filter((p) => p.id !== powerupId));
   };
 
   const playersReady = participants.length;
@@ -721,7 +839,9 @@ const LiveQuiz = () => {
   }, [lastSummary]);
 
   return (
-    <div className={`live-page ${quizMeta?.corporateMode ? 'corporate-mode' : ''}`}>
+    <div
+      className={`live-page ${quizMeta?.corporateMode ? "corporate-mode" : ""}`}
+    >
       {/* Connection Warning Modal */}
       {showConnectionWarning &&
         !acknowledgedWarning &&
@@ -897,27 +1017,39 @@ const LiveQuiz = () => {
           {viewingQuestion && (
             <div className="question-wrapper">
               {/* Active powerup effects indicator - hidden in corporate mode */}
-              {!quizMeta?.corporateMode && (activePowerupEffects.doublePoints || activePowerupEffects.shield) && (
-                <div style={{ 
-                  display: 'flex', 
-                  gap: '10px', 
-                  marginBottom: '10px', 
-                  justifyContent: 'center',
-                  flexWrap: 'wrap'
-                }}>
-                  {activePowerupEffects.doublePoints && (
-                    <Badge colorPalette="yellow" size="lg" style={{ fontSize: '14px', padding: '8px 12px' }}>
-                      ⭐ Double Points Active!
-                    </Badge>
-                  )}
-                  {activePowerupEffects.shield && (
-                    <Badge colorPalette="green" size="lg" style={{ fontSize: '14px', padding: '8px 12px' }}>
-                      🛡️ Shield Active!
-                    </Badge>
-                  )}
-                </div>
-              )}
-              
+              {!quizMeta?.corporateMode &&
+                (activePowerupEffects.doublePoints ||
+                  activePowerupEffects.shield) && (
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "10px",
+                      marginBottom: "10px",
+                      justifyContent: "center",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    {activePowerupEffects.doublePoints && (
+                      <Badge
+                        colorPalette="yellow"
+                        size="lg"
+                        style={{ fontSize: "14px", padding: "8px 12px" }}
+                      >
+                        ⭐ Double Points Active!
+                      </Badge>
+                    )}
+                    {activePowerupEffects.shield && (
+                      <Badge
+                        colorPalette="green"
+                        size="lg"
+                        style={{ fontSize: "14px", padding: "8px 12px" }}
+                      >
+                        🛡️ Shield Active!
+                      </Badge>
+                    )}
+                  </div>
+                )}
+
               <QuizOps
                 question={currentQuestion.text}
                 type={currentQuestion.answerType}
@@ -1119,7 +1251,21 @@ const LiveQuiz = () => {
                   </li>
                 ))}
               </ol>
-              <Button onClick={() => navigate("/home")}>Back to Home</Button>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "10px",
+                  marginTop: "20px",
+                  flexWrap: "wrap",
+                }}
+              >
+                {isHost && (
+                  <Button onClick={downloadQuizResultsPDF} colorScheme="green">
+                    <IoDownload /> Download PDF
+                  </Button>
+                )}
+                <Button onClick={() => navigate("/home")}>Back to Home</Button>
+              </div>
             </div>
           )}
         </section>
@@ -1179,16 +1325,19 @@ const LiveQuiz = () => {
           </div>
         </aside>
       </main>
-      
+
       {/* Powerup Bar - show during question phase and not in supervisor mode or corporate mode */}
-      {!supervisorMode && !quizMeta?.corporateMode && phase === "question" && playerPowerups.length > 0 && (
-        <PowerupBar
-          powerups={playerPowerups}
-          onUsePowerup={handleUsePowerup}
-          disabled={hasSubmitted}
-        />
-      )}
-      
+      {!supervisorMode &&
+        !quizMeta?.corporateMode &&
+        phase === "question" &&
+        playerPowerups.length > 0 && (
+          <PowerupBar
+            powerups={playerPowerups}
+            onUsePowerup={handleUsePowerup}
+            disabled={hasSubmitted}
+          />
+        )}
+
       {/* Powerup Grant Animation - hidden in corporate mode */}
       {!quizMeta?.corporateMode && showPowerupGrant && (
         <PowerupGrantAnimation

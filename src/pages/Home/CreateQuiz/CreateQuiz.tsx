@@ -340,7 +340,7 @@ const CreateQuiz = () => {
               <CgAdd />
             </Button>
           </Flex>
-          
+
           <Box mt={4} p={3} borderWidth="1px" borderRadius="md" bg="bg.subtle">
             <Flex alignItems="center" gap={3}>
               <input
@@ -351,8 +351,13 @@ const CreateQuiz = () => {
               />
               <Box>
                 <Text fontWeight="bold">Enable Corporate Mode</Text>
-                <Text fontSize="sm" color="gray.600" _dark={{ color: "gray.400" }}>
-                  For formal assessments: Reduced colors, no powerups, professional interface
+                <Text
+                  fontSize="sm"
+                  color="gray.600"
+                  _dark={{ color: "gray.400" }}
+                >
+                  For formal assessments: Reduced colors, no powerups,
+                  professional interface
                 </Text>
               </Box>
             </Flex>

@@ -150,13 +150,13 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
       setDeleteDialogOpen(false);
 
       // Wait a bit for the animation to be visible before making the API call
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const baseURL = "https://rayquiza-backend.onrender.com";
       // Use code-based deletion for better reliability
-      const url = `${baseURL}/api/quizzes/code/${quizToDelete.code}?userEmail=${encodeURIComponent(
-        userEmail
-      )}`;
+      const url = `${baseURL}/api/quizzes/code/${
+        quizToDelete.code
+      }?userEmail=${encodeURIComponent(userEmail)}`;
 
       console.log(`Deleting quiz with code: ${quizToDelete.code}`);
 
@@ -174,7 +174,7 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
       }
 
       // Wait for the animation to complete before removing from state
-      await new Promise(resolve => setTimeout(resolve, 400));
+      await new Promise((resolve) => setTimeout(resolve, 400));
 
       // Remove the quiz from the local state
       setQuizzes((prev) => prev.filter((q) => q._id !== quizToDelete._id));
@@ -192,7 +192,8 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
       setDeletingQuizId(null);
       toaster.create({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete quiz",
+        description:
+          error instanceof Error ? error.message : "Failed to delete quiz",
         type: "error",
       });
     }
@@ -275,14 +276,18 @@ const Quizzes = ({ quizPopup, quizDetails, setSelectedQuiz }: Props) => {
       </SimpleGrid>
 
       {/* Delete Confirmation Dialog */}
-      <DialogRoot open={deleteDialogOpen} onOpenChange={(e) => setDeleteDialogOpen(e.open)}>
+      <DialogRoot
+        open={deleteDialogOpen}
+        onOpenChange={(e) => setDeleteDialogOpen(e.open)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Quiz</DialogTitle>
           </DialogHeader>
           <DialogBody>
             <Text>
-              Are you sure you want to delete "{quizToDelete?.title}"? This action cannot be undone.
+              Are you sure you want to delete "{quizToDelete?.title}"? This
+              action cannot be undone.
             </Text>
           </DialogBody>
           <DialogFooter>

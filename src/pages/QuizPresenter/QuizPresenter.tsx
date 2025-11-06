@@ -1,6 +1,16 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Box, Button, Container, Heading, VStack, HStack, Badge, Text, SimpleGrid } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Container,
+  Heading,
+  VStack,
+  HStack,
+  Badge,
+  Text,
+  SimpleGrid,
+} from "@chakra-ui/react";
 import { IoArrowBack, IoArrowForward, IoPlayCircle } from "react-icons/io5";
 import { useAccentColor } from "@/contexts/UserPreferencesContext";
 import "./QuizPresenter.css";
@@ -48,7 +58,7 @@ const QuizPresenter = () => {
     try {
       const baseURL = "https://rayquiza-backend.onrender.com";
       const response = await fetch(`${baseURL}/api/quizzes/code/${quizCode}`);
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch quiz");
       }
@@ -156,10 +166,10 @@ const QuizPresenter = () => {
     return (
       <Box className="presenter-page alignment-check-page">
         <Container maxW="100vw" height="100vh" p={0} centerContent>
-          <VStack 
-            width="100%" 
-            height="100vh" 
-            justifyContent="center" 
+          <VStack
+            width="100%"
+            height="100vh"
+            justifyContent="center"
             gap={8}
             position="relative"
             onClick={() => setAlignmentCheck(true)}
@@ -182,19 +192,27 @@ const QuizPresenter = () => {
                 👆 Click anywhere when ready to continue
               </Text>
             </VStack>
-            
+
             {/* Corner markers */}
             <Box position="absolute" top={4} left={4}>
-              <Badge colorPalette="red" size="lg" fontSize="lg">TOP LEFT</Badge>
+              <Badge colorPalette="red" size="lg" fontSize="lg">
+                TOP LEFT
+              </Badge>
             </Box>
             <Box position="absolute" top={4} right={4}>
-              <Badge colorPalette="red" size="lg" fontSize="lg">TOP RIGHT</Badge>
+              <Badge colorPalette="red" size="lg" fontSize="lg">
+                TOP RIGHT
+              </Badge>
             </Box>
             <Box position="absolute" bottom={4} left={4}>
-              <Badge colorPalette="red" size="lg" fontSize="lg">BOTTOM LEFT</Badge>
+              <Badge colorPalette="red" size="lg" fontSize="lg">
+                BOTTOM LEFT
+              </Badge>
             </Box>
             <Box position="absolute" bottom={4} right={4}>
-              <Badge colorPalette="red" size="lg" fontSize="lg">BOTTOM RIGHT</Badge>
+              <Badge colorPalette="red" size="lg" fontSize="lg">
+                BOTTOM RIGHT
+              </Badge>
             </Box>
           </VStack>
         </Container>
@@ -214,7 +232,12 @@ const QuizPresenter = () => {
               {quiz.description}
             </Text>
             <HStack gap={4}>
-              <Badge size="lg" colorPalette={accentColor as any} p={3} fontSize="lg">
+              <Badge
+                size="lg"
+                colorPalette={accentColor as any}
+                p={3}
+                fontSize="lg"
+              >
                 {quiz.questions.length} Questions
               </Badge>
               <Badge size="lg" colorPalette="blue" p={3} fontSize="lg">
@@ -222,8 +245,9 @@ const QuizPresenter = () => {
               </Badge>
             </HStack>
             <Text fontSize="md" color="fg.muted" maxW="500px">
-              Click on options to reveal answers. Wrong answers turn red, correct answers turn green.
-              Perfect for live presentations and events!
+              Click on options to reveal answers. Wrong answers turn red,
+              correct answers turn green. Perfect for live presentations and
+              events!
             </Text>
             <HStack gap={4} mt={8}>
               <Button
@@ -252,7 +276,12 @@ const QuizPresenter = () => {
     return (
       <Box className="presenter-page thank-you-page">
         <Container maxW="container.lg" py={16}>
-          <VStack gap={10} textAlign="center" minH="80vh" justifyContent="center">
+          <VStack
+            gap={10}
+            textAlign="center"
+            minH="80vh"
+            justifyContent="center"
+          >
             <Box fontSize="8xl">🎉</Box>
             <Heading size="6xl" color="fg">
               Thank You!
@@ -294,10 +323,7 @@ const QuizPresenter = () => {
         <VStack gap={6} align="stretch">
           {/* Header */}
           <HStack justifyContent="space-between" mb={4}>
-            <Button
-              variant="outline"
-              onClick={() => navigate("/home")}
-            >
+            <Button variant="outline" onClick={() => navigate("/home")}>
               <IoArrowBack /> Exit
             </Button>
             <HStack gap={4}>
@@ -356,7 +382,7 @@ const QuizPresenter = () => {
                       ? "green"
                       : state === "wrong"
                       ? "red"
-                      : accentColor as any
+                      : (accentColor as any)
                   }
                   variant={state === "default" ? "outline" : "solid"}
                 >
@@ -396,7 +422,7 @@ const QuizPresenter = () => {
             <Button
               onClick={handleNextQuestion}
               disabled={!correctAnswered}
-              colorPalette={isLastQuestion ? "green" : accentColor as any}
+              colorPalette={isLastQuestion ? "green" : (accentColor as any)}
               size="lg"
             >
               {isLastQuestion ? "Finish" : "Next"} <IoArrowForward />

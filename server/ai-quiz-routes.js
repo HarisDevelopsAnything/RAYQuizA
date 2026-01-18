@@ -13,6 +13,57 @@ const openai = new OpenAI({
   },
 });
 
+// Endpoint to fetch available free models from OpenRouter
+router.get('/available-models', async (req, res) => {
+  try {
+    console.log('Fetching available models from OpenRouter...');
+    
+    // Fetch models from OpenRouter API
+    const response = await fetch('https://openrouter.ai/api/v1/models', {
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        'HTTP-Referer': process.env.APP_URL || 'http://localhost:5173',
+        'X-Title': 'RAYQuizA',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log(`Received ${data.data?.length || 0} models from OpenRouter`);
+
+    // Filter for completely free models (pricing.prompt = 0 and pricing.completion = 0)
+    const freeModels = data.data.filter(model => {
+      const pricing = model.pricing;
+      const isFree = pricing && 
+        parseFloat(pricing.prompt) === 0 && 
+        parseFloat(pricing.completion) === 0;
+      return isFree;
+    }).map(model => ({
+      id: model.id,
+      name: model.name || model.id,
+      description: model.description || '',
+      context_length: model.context_length || 0,
+    }));
+
+    console.log(`Filtered to ${freeModels.length} free models`);
+    console.log('Free models:', freeModels.map(m => m.id).join(', '));
+
+    res.json({
+      models: freeModels,
+      count: freeModels.length,
+    });
+  } catch (error) {
+    console.error('Error fetching available models:', error);
+    res.status(500).json({
+      error: 'Failed to fetch available models',
+      details: error.message,
+    });
+  }
+});
+
 router.post('/generate-quiz', async (req, res) => {
   try {
     const {
@@ -22,12 +73,20 @@ router.post('/generate-quiz', async (req, res) => {
       targetAge,
       difficulty,
       additionalInstructions,
+      model, // Accept model from frontend
     } = req.body;
 
     // Validate required fields
     if (!title || !numQuestions || !genre) {
       return res.status(400).json({
         error: 'Missing required fields: title, numQuestions, and genre are required',
+      });
+    }
+
+    // Validate model is provided
+    if (!model) {
+      return res.status(400).json({
+        error: 'Model selection is required',
       });
     }
 
@@ -41,7 +100,7 @@ router.post('/generate-quiz', async (req, res) => {
       additionalInstructions,
     });
 
-    const selectedModel = process.env.AI_MODEL || 'openai/gpt-4o-mini';
+    const selectedModel = model; // Use the model selected by user
     
     // Some models don't support JSON mode, so we'll try with and without
     const requestConfig = {
@@ -145,17 +204,17 @@ router.post('/generate-quiz', async (req, res) => {
     
     // Check for common issues
     if (error.message.includes('JSON')) {
-      errorDetails = `Model returned invalid JSON. Try using 'openai/gpt-4o-mini' instead. Error: ${error.message}`;
+      errorDetails = `Model returned invalid JSON. Try a different model. Error: ${error.message}`;
     } else if (error.message.includes('API key')) {
       errorDetails = 'Invalid API key. Check your OPENROUTER_API_KEY in environment variables.';
     } else if (error.message.includes('model')) {
-      errorDetails = `Model issue: ${error.message}. Try 'openai/gpt-4o-mini' in your .env`;
+      errorDetails = `Model issue: ${error.message}. Try a different model.`;
     }
     
     res.status(500).json({
       error: errorMessage,
       details: errorDetails,
-      model: process.env.AI_MODEL || 'openai/gpt-4o-mini',
+      model: req.body.model || 'unknown',
     });
   }
 });

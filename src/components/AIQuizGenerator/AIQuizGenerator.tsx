@@ -7,8 +7,11 @@ import {
   VStack,
   HStack,
   Portal,
+  Spinner,
+  NativeSelectRoot,
+  NativeSelectField,
 } from "@chakra-ui/react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAccentColor } from "@/contexts/UserPreferencesContext";
 import { MdClose } from "react-icons/md";
 
@@ -35,6 +38,13 @@ export interface AIGeneratedQuizData {
   }>;
 }
 
+interface AIModel {
+  id: string;
+  name: string;
+  description: string;
+  context_length: number;
+}
+
 interface AIGeneratorFormData {
   title: string;
   numQuestions: number;
@@ -42,6 +52,7 @@ interface AIGeneratorFormData {
   targetAge: string;
   difficulty: "easy" | "medium" | "hard";
   additionalInstructions: string;
+  model: string;
 }
 
 const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
@@ -51,6 +62,9 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
 }) => {
   const accentColor = useAccentColor();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
+  const [modelsError, setModelsError] = useState<string | null>(null);
   const [formData, setFormData] = useState<AIGeneratorFormData>({
     title: "",
     numQuestions: 5,
@@ -58,7 +72,47 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
     targetAge: "",
     difficulty: "medium",
     additionalInstructions: "",
+    model: "",
   });
+
+  // Fetch available models when component opens
+  useEffect(() => {
+    if (isOpen && availableModels.length === 0) {
+      fetchAvailableModels();
+    }
+  }, [isOpen]);
+
+  const fetchAvailableModels = async () => {
+    setIsLoadingModels(true);
+    setModelsError(null);
+    
+    try {
+      const apiUrl = import.meta.env.DEV
+        ? "/api/available-models"
+        : "https://rayquiza-backend.onrender.com/api/available-models";
+
+      const response = await fetch(apiUrl);
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch available models");
+      }
+
+      const data = await response.json();
+      setAvailableModels(data.models || []);
+      
+      // Auto-select first model if available
+      if (data.models && data.models.length > 0 && !formData.model) {
+        setFormData((prev) => ({ ...prev, model: data.models[0].id }));
+      }
+    } catch (error) {
+      console.error("Error fetching models:", error);
+      setModelsError(
+        error instanceof Error ? error.message : "Failed to load models"
+      );
+    } finally {
+      setIsLoadingModels(false);
+    }
+  };
 
   const handleInputChange = (
     field: keyof AIGeneratorFormData,
@@ -70,6 +124,11 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
   const handleGenerate = async () => {
     if (!formData.title.trim() || !formData.genre.trim()) {
       alert("Please fill in at least the quiz title and genre/topic");
+      return;
+    }
+
+    if (!formData.model) {
+      alert("Please select an AI model");
       return;
     }
 
@@ -107,6 +166,7 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
         targetAge: "",
         difficulty: "medium",
         additionalInstructions: "",
+        model: availableModels[0]?.id || "",
       });
     } catch (error) {
       console.error("Error generating quiz:", error);
@@ -166,6 +226,61 @@ const AIQuizGenerator: React.FC<AIQuizGeneratorProps> = ({
             </Box>
 
             <VStack gap={4} align="stretch">
+              {/* Model Selection */}
+              <Box>
+                <Text mb={2} fontWeight="bold">
+                  AI Model *
+                </Text>
+                {isLoadingModels ? (
+                  <HStack p={3} borderWidth={1} borderRadius="md">
+                    <Spinner size="sm" />
+                    <Text fontSize="sm">Loading available models...</Text>
+                  </HStack>
+                ) : modelsError ? (
+                  <Box>
+                    <Text color="red.500" fontSize="sm" mb={2}>
+                      {modelsError}
+                    </Text>
+                    <Button size="sm" onClick={fetchAvailableModels}>
+                      Retry
+                    </Button>
+                  </Box>
+                ) : availableModels.length === 0 ? (
+                  <Box>
+                    <Text color="orange.500" fontSize="sm" mb={2}>
+                      No free models available. Please check your API key.
+                    </Text>
+                    <Button size="sm" onClick={fetchAvailableModels}>
+                      Retry
+                    </Button>
+                  </Box>
+                ) : (
+                  <NativeSelectRoot>
+                    <NativeSelectField
+                      value={formData.model}
+                      onChange={(e) =>
+                        handleInputChange("model", e.target.value)
+                      }
+                      placeholder="Select an AI model"
+                    >
+                      <option value="" disabled>
+                        Select an AI model
+                      </option>
+                      {availableModels.map((model) => (
+                        <option key={model.id} value={model.id}>
+                          {model.name}
+                        </option>
+                      ))}
+                    </NativeSelectField>
+                  </NativeSelectRoot>
+                )}
+                <Text fontSize="sm" color="gray.500" mt={1}>
+                  {availableModels.length > 0
+                    ? `${availableModels.length} free model(s) available`
+                    : "Fetching models..."}
+                </Text>
+              </Box>
+
               <Box>
                 <Text mb={2} fontWeight="bold">
                   Quiz Title *
